@@ -1,0 +1,20 @@
+/* https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Media_objects */
+.mbox {
+  display: flex;
+  align-items: flex-start;
+}
+
+.mbox .mbox-img {
+  width: 64px;
+  height: 64px;
+  margin-right: 1rem;
+}
+
+.mbox .mbox-body {
+  flex: 1;
+  color: var(--fgcolor-accent);
+}
+
+.mbox-body > .header {
+  margin-top: 0;
+}

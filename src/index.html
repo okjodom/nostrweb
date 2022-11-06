@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>nostr sandbox</title>
+    <link rel="stylesheet" href="main.css" type="text/css">
+  </head>
+  <body>
+    <div class="tabs">
+
+      <div class="tab">
+        <input type="radio" name="maintabs" id="homefeed" checked>
+        <label for="homefeed">feed</label>
+        <div class="content">
+          <div class="cards" id="feedlist"></div>
+        </div>
+      </div>
+
+      <div class="tab">
+        <input type="radio" name="maintabs" id="trending">
+        <label for="trending">trending</label>
+        <div class="content">
+          <p><a href="https://github.com/nostr-protocol/nips/blob/master/12.md">NIP-12 (generic queries)</a></p>
+        </div>
+      </div>
+
+      <div class="tab">
+        <input type="radio" name="maintabs" id="direct">
+        <label for="direct">direct</label>
+        <div class="content">
+          <p><a href="https://github.com/nostr-protocol/nips/blob/master/04.md">NIP-04 (direct msg)</a></p>
+        </div>
+      </div>
+
+      <div class="tab">
+        <input type="radio" name="maintabs" id="chat">
+        <label for="chat">chat</label>
+        <div class="content">
+          <p><a href="https://github.com/nostr-protocol/nips/blob/master/28.md">NIP-28 (public chat)</a></p>
+        </div>
+      </div>
+
+    </div>
+  </body>
+  <script src="main.js"></script>
+</html>

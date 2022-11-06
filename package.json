@@ -1,0 +1,17 @@
+{
+  "name": "nostrweb",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "esbuild": "^0.14.54",
+    "esbuild-plugin-alias": "^0.2.1",
+    "events": "^3.3.0",
+    "nostr-tools": "0.24.1"
+  },
+  "scripts": {
+    "build": "node tools/build.js",
+    "serve": "node tools/serve.js"
+  }
+}

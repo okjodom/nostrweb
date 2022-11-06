@@ -1,0 +1,39 @@
+@import "tabs.css";
+@import "cards.css";
+
+@media (prefers-color-scheme: light) {
+  html {
+    --bgcolor: #fff7e9;
+    --bgcolor-accent: #ff731d;
+    --fgcolor: #1746a2;
+    --fgcolor-accent: #5f9df7;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    --bgcolor: #191919;
+    --bgcolor-accent: #2d4263;
+    --fgcolor: #c84b31;
+    --fgcolor-accent: #ecdbba;
+  }
+
+  img {
+    opacity: .75;
+    transition: opacity .5s ease-in-out;
+  }
+  img:hover {
+    opacity: 1;
+  }
+}
+
+*, ::after, ::before {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bgcolor);
+  color: var(--fgcolor);
+  font-family: monospace;
+  font-size: 120%;
+}
