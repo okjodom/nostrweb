@@ -1,6 +1,6 @@
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Media_objects */
 .mbox {
-  align-items: flex-start;
+  align-items: center;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -8,6 +8,7 @@
 }
 
 .mbox .mbox-img {
+  align-self: flex-start;
   flex-basis: 64px;
   height: 64px;
   margin-right: 1rem;
