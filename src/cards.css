@@ -1,20 +1,29 @@
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Media_objects */
 .mbox {
-  display: flex;
   align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .mbox .mbox-img {
-  width: 64px;
+  flex-basis: 64px;
   height: 64px;
   margin-right: 1rem;
+  width: 64px;
+}
+
+.mbox .mbox-header {
+  flex-basis: calc(100% - 64px - 1rem);
+  flex-grow: 0;
+  flex-shrink: 1;
+  margin-top: 0;
 }
 
 .mbox .mbox-body {
-  flex: 1;
   color: var(--fgcolor-accent);
-}
-
-.mbox-body > .header {
-  margin-top: 0;
+  flex-basis: calc(100% - 64px - 1rem);
+  flex-grow: 0;
+  flex-shrink: 1;
 }
