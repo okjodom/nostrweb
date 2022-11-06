@@ -1,0 +1,6 @@
+pipeline:
+  build:
+    image: node:18-slim
+    commands:
+      - npm ci
+      - npm run build
