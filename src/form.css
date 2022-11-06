@@ -1,0 +1,60 @@
+form {
+  max-width: 64ch;
+}
+
+button,
+input,
+textarea {
+  font-family: monospace;
+}
+
+label {
+  display: block;
+  margin-bottom: .5rem;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+input[type="text"] {
+  display: block;
+  margin-bottom: 1rem;
+  padding: .5rem;
+  width: 100%;
+}
+
+input[type="password"] {
+  display: block;
+  margin-bottom: 1rem;
+  padding: .5rem;
+  width: 100%;
+}
+
+button {
+  background-color: var(--bgcolor-accent);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: .5rem 1rem;
+}
+
+button:disabled {
+  background-color: var(--bgcolor-inactive);
+  cursor: default;
+}
+
+.buttons {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  height: 2rem;
+}
+
+.inline-text,
+.inline-error {
+  display: inline-block;
+  padding: 0 1ch;
+}
+
+.inline-error {
+  color: var(--color-danger);
+}

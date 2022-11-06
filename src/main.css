@@ -1,10 +1,16 @@
 @import "tabs.css";
 @import "cards.css";
+@import "form.css";
+
+:root {
+  --color-danger: #e00;
+}
 
 @media (prefers-color-scheme: light) {
   html {
     --bgcolor: #fff7e9;
     --bgcolor-accent: #ff731d;
+    --bgcolor-inactive: #737373;
     --fgcolor: #1746a2;
     --fgcolor-accent: #5f9df7;
   }
@@ -14,6 +20,7 @@
   html {
     --bgcolor: #191919;
     --bgcolor-accent: #2d4263;
+    --bgcolor-inactive: #535353;
     --fgcolor: #c84b31;
     --fgcolor-accent: #ecdbba;
   }

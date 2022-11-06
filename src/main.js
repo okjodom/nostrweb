@@ -1,4 +1,4 @@
-import {relayPool} from 'nostr-tools';
+import {relayPool, generatePrivateKey, getPublicKey} from 'nostr-tools';
 import {elem} from './domutil.js';
 
 const pool = relayPool();
@@ -18,7 +18,6 @@ const userList = [];
 function onEvent(evt, relay) {
   switch (evt.kind) {
     case 0:
-      // console.log(`event.kind=0 from ${relay}`, evt);
       try {
         const content = JSON.parse(evt.content);
         setMetadata(userList, relay, evt, content);
@@ -33,7 +32,7 @@ function onEvent(evt, relay) {
       renderRecommendServer(evt, relay);
       break;
     default:
-      // console.log(`add support for ${evt.kind}`, evt)
+      console.log(`TODO: add support for event kind ${evt.kind}`, evt)
   }
 }
 
@@ -109,6 +108,65 @@ function setMetadata(userList, relay, evt, content) {
       timestamp: evt.created_at,
       ...content,
     };
-    console.log('update existing user', user);
   }
 }
+
+// settings
+
+const form = document.querySelector('form[name="settings"]');
+const privateKeyInput = form.querySelector('#privatekey');
+const pubKeyInput = form.querySelector('#pubkey');
+const keyError = form.querySelector('#keyError');
+const generateBtn = form.querySelector('button[name="generate"]');
+const importBtn = form.querySelector('button[name="import"]');
+
+generateBtn.addEventListener('click', (evt) => {
+  evt.preventDefault();
+  const privateKey = generatePrivateKey();
+  const pubKey = getPublicKey(privateKey);
+  if (validKeys(privateKey, pubKey)) {
+    localStorage.setItem('privateKey', privateKey);
+    localStorage.setItem('pubKey', pubKey);
+    privateKeyInput.value = privateKey;
+    pubKeyInput.value = pubKey;
+  }
+});
+
+privateKeyInput.value = localStorage.getItem('privateKey');
+pubKeyInput.value = localStorage.getItem('pubKey');
+
+importBtn.addEventListener('click', (evt) => {
+  evt.preventDefault();
+  const privateKey = privateKeyInput.value;
+  const pubKey = pubKeyInput.value;
+  if (validKeys(privateKey, pubKey)) {
+    localStorage.setItem('privateKey', privateKey);
+    localStorage.setItem('pubKey', pubKey);
+  }
+});
+
+form.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
+
+function validKeys(privateKey, pubKey) {
+  if (pubKey && privateKey) {
+    try {
+      if (getPublicKey(privateKey) === pubKey) {
+        keyError.hidden = true;
+        keyError.textContent = '';
+        importBtn.removeAttribute('disabled');
+        return true;
+      } else {
+        keyError.textContent = 'private key does not correspond to public key!'
+      }
+    } catch (e) {
+      keyError.textContent = `not a valid private key: ${e.message || e}`;
+    }
+  }
+  keyError.hidden = false;
+  importBtn.setAttribute('disabled', true);
+  return  false;
+}
+
+document.body.addEventListener('keyup', () => {
+  console.log(document.activeElemen)
+});
