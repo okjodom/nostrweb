@@ -2,17 +2,24 @@
 @import "cards.css";
 @import "form.css";
 
-:root {
-  --color-danger: #e00;
+
+::selection {
+  background: #ff79f9;
+  color: #fff;
+}
+
+:where([hidden]) {
+  display: none !important;
 }
 
 @media (prefers-color-scheme: light) {
   html {
-    --bgcolor: #fff7e9;
+    --bgcolor: #fff;
     --bgcolor-accent: #ff731d;
-    --bgcolor-inactive: #737373;
-    --fgcolor: #1746a2;
-    --fgcolor-accent: #5f9df7;
+    --bgcolor-inactive: #bababa;
+    --color: rgb(68 68 68);
+    --color-accent: rgb(0 0 0);
+    --bgcolor-danger: rgb(255 0 0);
   }
 }
 
@@ -21,8 +28,9 @@
     --bgcolor: #191919;
     --bgcolor-accent: #2d4263;
     --bgcolor-inactive: #535353;
-    --fgcolor: #c84b31;
-    --fgcolor-accent: #ecdbba;
+    --color: #c84b31;
+    --color-accent: #ecdbba;
+    --bgcolor-danger: rgb(255 0 0);
   }
 
   img {
@@ -34,13 +42,27 @@
   }
 }
 
-*, ::after, ::before {
-  box-sizing: border-box;
+html {
+  font-size: 62.5%;
+  line-height: 1;
 }
 
 body {
   background-color: var(--bgcolor);
-  color: var(--fgcolor);
+  color: var(--color);
   font-family: monospace;
-  font-size: 120%;
+  font-size: 1.6rem;
+  line-height: 1.5;
+}
+
+small {
+  font-size: 1.2rem;
+}
+
+*, ::after, ::before {
+  box-sizing: border-box;
+}
+
+.danger {
+  background-color: var(--bgcolor-danger);
 }

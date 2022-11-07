@@ -44,15 +44,20 @@
         <input type="radio" name="maintabs" id="settings">
         <label for="settings">settings</label>
         <form name="settings" method="post" class="content">
-          <label for="pubkey">public key</label>
+          <label for="pubkey">public-key</label>
           <input type="text" name="pubkey" id="pubkey">
-          <label for="privatekey">private key</label>
-          <input type="text" name="privatekey" id="privatekey">
+          <label for="privatekey">
+            private-key
+            <button type="button" name="privatekey-toggle" class="button-inline" >
+              <small>show</small>
+            </button>
+          </label>
+          <input type="password" name="privatekey" id="privatekey">
           <div class="buttons">
-            <span id="keyError" class="inline-error" hidden></span>
-            <button name="generate">generate</button>
-            <span class="inline-text"> or </span>
-            <button name="import" disabled>import</button>
+            <div id="keystatus" class="form-status" hidden></div>
+            <button type="button" name="generate" tabindex="0">new</button>
+            <span class="inline-text"></span>
+            <button type="button" name="import" tabindex="0" disabled>save</button>
           </div>
         </form>
       </div>

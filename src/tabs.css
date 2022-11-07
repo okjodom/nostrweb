@@ -9,20 +9,20 @@
 
 .tab > label {
   cursor: pointer;
-  font-size: 1.1em;
-  padding: .5em 1em;
+  padding: 1rem 1.5em;
 }
 
 .tab [type=radio] {
-  position: absolute;
-  height: 0;
-  width: 0;
-  overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  height: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 0;
 }
 
 .tab [type=radio] + label {
-  outline: 1px solid var(--bgcolor-accent);
+  outline: 2px solid var(--bgcolor-accent);
+  outline-offset: -1px;
 }
 
 /*
@@ -32,22 +32,21 @@
 */
 
 .tab [type=radio]:checked ~ label {
-  z-index: 2;
   background-color: var(--bgcolor-accent);
-  color: var(--fgcolor-accent);
+  color: var(--color-accent);
+  z-index: 2;
 }
 
 .tab [type=radio]:checked ~ label ~ .content {
-  z-index: 1;
   opacity: 1;
+  z-index: 1;
 }
 
 .tab .content {
-  position: absolute;
-  top: 2.5em;
-  left: 0;
-  right: 0;
   bottom: 0;
-  padding: 1rem 0;
+  left: 0;
   opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 5em;
 }

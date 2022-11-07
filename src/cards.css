@@ -23,8 +23,9 @@
 }
 
 .mbox .mbox-body {
-  color: var(--fgcolor-accent);
+  color: var(--color-accent);
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
+  max-width: 84ch;
 }

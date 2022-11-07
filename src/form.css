@@ -1,32 +1,52 @@
 form {
-  max-width: 64ch;
+  max-width: 72ch;
+}
+
+input,
+textarea {
+  color: var(--bgcolor-accent);
+  font-family: monospace;
+  font-size: 1.6rem;
+  margin-bottom: 1.2rem;
+  padding: 1.3rem 1.8rem;
 }
 
 button,
-input,
-textarea {
-  font-family: monospace;
-}
-
 label {
+  color: var(--bgcolor-accent);
   display: block;
-  margin-bottom: .5rem;
-  padding-left: 0;
+  font-size: 1.6rem;
+  margin-bottom: 0;
+  padding: 1.3rem 1.8rem;
   text-indent: 0;
 }
 
+input[type="password"],
 input[type="text"] {
+  border: .2rem solid #b7b7b7;
+  border-radius: .2rem;
   display: block;
-  margin-bottom: 1rem;
-  padding: .5rem;
+  outline-color: rgb(102, 102, 102);
   width: 100%;
 }
+input[type="password"]:focus,
+input[type="text"]:focus {
+  border-color: #d4d4d4;
+  outline-offset: 1px;
+}
 
-input[type="password"] {
-  display: block;
-  margin-bottom: 1rem;
-  padding: .5rem;
-  width: 100%;
+.buttons {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  min-height: 3.2rem;
+}
+
+.button-inline {
+  background: transparent;
+  color: var(--color);
+  display: inline;
+  padding: .3rem;
 }
 
 button {
@@ -34,7 +54,6 @@ button {
   border: none;
   color: white;
   cursor: pointer;
-  padding: .5rem 1rem;
 }
 
 button:disabled {
@@ -42,19 +61,12 @@ button:disabled {
   cursor: default;
 }
 
-.buttons {
-  align-items: center;
-  display: flex;
-  justify-content: flex-end;
-  height: 2rem;
-}
-
-.inline-text,
-.inline-error {
+.inline-text {
   display: inline-block;
   padding: 0 1ch;
 }
 
-.inline-error {
-  color: var(--color-danger);
+.form-status {
+  flex-grow: 1;
+  padding: 1rem 1.8rem;
 }
