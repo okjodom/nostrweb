@@ -27,3 +27,18 @@ execute
 
 the build is done using [esbuild](https://esbuild.github.io/), with a config in
 [esbuildconf.js](esbuildconf.js). the result is placed in `dist` directory.
+
+## release
+
+1. make sure `version` field in [package.json](package.json) as seen by remote
+git on **master** branch matches the tag created in the next step.
+2. tag a commit on **master** branch with a `git tag v<vesion>`.
+3. push the tag to the remote: `git push --tags`.
+
+the CI then receives a git tag event, executes `npm run build`, creates
+a tar.gz with all the files found in `dist` directory and uploads it as a new
+release artifact. the release is named after the tag name.
+
+the idea is that nostr web instances are then notified about a new release,
+download the tar.gz archive and update their local copies.
+this is not yet implemented.

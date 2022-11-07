@@ -4,3 +4,23 @@ pipeline:
     commands:
       - npm ci
       - npm run build
+  prepare_release:
+    when:
+      event: tag
+      branch: master
+      tag: v*
+    image: node:18-slim
+    commands:
+      - tools/ci-make-release-targz.sh
+  create_release:
+    when:
+      event: tag
+      branch: master
+      tag: v*
+    image: plugins/gitea-release
+    settings:
+      api_key:
+        from_secret: releaser_auth_token
+      base_url: https://git.qcode.ch
+      files: nostrweb.tar.gz
+      note: "automated release by ${CI_SYSTEM_HOST} \nbuild id: ${CI_BUILD_NUMBER}"
