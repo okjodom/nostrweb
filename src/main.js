@@ -1,13 +1,16 @@
-import {relayPool, generatePrivateKey, getPublicKey} from 'nostr-tools';
+import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tools';
 import {elem} from './domutil.js';
 
 const pool = relayPool();
-// pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
-pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
-pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
-pool.addRelay('wss://relay.damus.io', {read: true, write: true});
-
+pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
+// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
+// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
+// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+// pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+// read only
+// pool.addRelay('wss://nostr.rocks', {read: true, write: false});
+// pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
+// pool.addRelay('wss://nostr-relay.untethr.me', {read: true, write: false});
 
 const feedlist = document.querySelector('#feedlist');
 
@@ -18,8 +21,9 @@ const dateTime = new Intl.DateTimeFormat(navigator.language, {
 
 const userList = [];
 let max = 0;
+
 function onEvent(evt, relay) {
-  if (max++ >= 7) {
+  if (max++ >= 23) {
     return subscription.unsub();
   }
   switch (evt.kind) {
@@ -42,6 +46,8 @@ function onEvent(evt, relay) {
   }
 }
 
+const pubkey = localStorage.getItem('pub_key')
+
 const subscription = pool.sub({
   cb: onEvent,
   filter: {
@@ -49,6 +55,7 @@ const subscription = pool.sub({
       '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
       'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
       '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
+      pubkey, // me
       // '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245'  // jb55
     ]
   }
@@ -80,7 +87,7 @@ function renderRecommendServer(evt, relay) {
 
 function rendernArticle(content) {
   const art = elem('article', {className: 'mbox'}, content);
-  feedlist.append(art);
+  feedlist.prepend(art);
 }
 
 function getMetadata(evt, relay) {
@@ -117,8 +124,35 @@ function setMetadata(userList, relay, evt, content) {
   }
 }
 
-// settings
+// check pool.status
 
+// publish
+const publish = document.querySelector('#publish');
+publish.addEventListener('click', async () => {
+  const pubkey = localStorage.getItem('pub_key');
+  const privatekey = localStorage.getItem('private_key');
+  if (!pubkey || !privatekey) {
+    return console.warn('no pubkey/privatekey');
+  }
+  const newEvent = {
+    kind: 1,
+    pubkey,
+    content: 'geil',
+    tags: [],
+    created_at: Math.floor(Date.now() * 0.001),
+  };
+  const sig = await signEvent(newEvent, privatekey);
+  const ev = await pool.publish({...newEvent, sig}, (status, url) => {
+    if (status === 0) {
+      console.log(`publish request sent to ${url}`)
+    }
+    if (status === 1) {
+      console.log(`event published by ${url}`, ev)
+    }
+  });
+});
+
+// settings
 const form = document.querySelector('form[name="settings"]');
 const privateKeyInput = form.querySelector('#privatekey');
 const pubKeyInput = form.querySelector('#pubkey');
@@ -128,33 +162,33 @@ const importBtn = form.querySelector('button[name="import"]');
 const privateTgl = form.querySelector('button[name="privatekey-toggle"]')
 
 generateBtn.addEventListener('click', () => {
-  const privateKey = generatePrivateKey();
-  const pubKey = getPublicKey(privateKey);
-  if (validKeys(privateKey, pubKey)) {
-    privateKeyInput.value = privateKey;
-    pubKeyInput.value = pubKey;
+  const privatekey = generatePrivateKey();
+  const pubkey = getPublicKey(privatekey);
+  if (validKeys(privatekey, pubkey)) {
+    privateKeyInput.value = privatekey;
+    pubKeyInput.value = pubkey;
     statusMessage.textContent = 'private-key created!';
     statusMessage.hidden = false;
   }
 });
 
 importBtn.addEventListener('click', () => {
-  const privateKey = privateKeyInput.value;
-  const pubKey = pubKeyInput.value;
-  if (validKeys(privateKey, pubKey)) {
-    localStorage.setItem('privateKey', privateKey);
-    localStorage.setItem('pubKey', pubKey);
-    statusMessage.textContent = 'private-key saved in local storage!';
+  const privatekey = privateKeyInput.value;
+  const pubkey = pubKeyInput.value;
+  if (validKeys(privatekey, pubkey)) {
+    localStorage.setItem('private_key', privatekey);
+    localStorage.setItem('pub_key', pubkey);
+    statusMessage.textContent = 'stored private and public key locally!';
     statusMessage.hidden = false;
   }
 });
 
 form.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
 
-function validKeys(privateKey, pubKey) {
-  if (pubKey && privateKey) {
+function validKeys(privatekey, pubkey) {
+  if (pubkey && privatekey) {
     try {
-      if (getPublicKey(privateKey) === pubKey) {
+      if (getPublicKey(privatekey) === pubkey) {
         statusMessage.hidden = true;
         statusMessage.textContent = 'public-key corresponds to private-key';
         importBtn.removeAttribute('disabled');
@@ -175,5 +209,5 @@ privateTgl.addEventListener('click', () => {
   privateKeyInput.type = privateKeyInput.type === 'text' ? 'password' : 'text';
 });
 
-privateKeyInput.value = localStorage.getItem('privateKey');
-pubKeyInput.value = localStorage.getItem('pubKey');
+privateKeyInput.value = localStorage.getItem('private_key');
+pubKeyInput.value = localStorage.getItem('pub_key');

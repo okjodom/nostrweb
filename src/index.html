@@ -13,6 +13,9 @@
         <label for="homefeed">feed</label>
         <div class="content">
           <div class="cards" id="feedlist"></div>
+          <div class="buttons buttons-bottombar">
+            <button type="button" class="button-big" id="publish">Write</button>
+          </div>
         </div>
       </div>
 
@@ -54,7 +57,7 @@
           </label>
           <input type="password" name="privatekey" id="privatekey">
           <div class="buttons">
-            <div id="keystatus" class="form-status" hidden></div>
+            <small id="keystatus" class="form-status" hidden></small>
             <button type="button" name="generate" tabindex="0">new</button>
             <span class="inline-text"></span>
             <button type="button" name="import" tabindex="0" disabled>save</button>
