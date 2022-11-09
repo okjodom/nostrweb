@@ -12,10 +12,16 @@
         <input type="radio" name="maintabs" id="homefeed" checked>
         <label for="homefeed">feed</label>
         <div class="content">
+          <article class="mbox">
+            <img class="mbox-img" src="bubble.svg">
+            <div class="mbox-body">
+              <form class="form-inline">
+                <input type="text" name="message">
+                <button type="button" id="publish">send</button>
+              </form>
+            </div>
+          </article>
           <div class="cards" id="feedlist"></div>
-          <div class="buttons buttons-bottombar">
-            <button type="button" class="button-big" id="publish">Write</button>
-          </div>
         </div>
       </div>
 

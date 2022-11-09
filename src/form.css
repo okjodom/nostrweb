@@ -3,7 +3,7 @@ form {
 
 input,
 textarea {
-  color: var(--bgcolor-accent);
+  color: var(--color);
   font-family: monospace;
   font-size: 1.6rem;
   margin-bottom: 1.2rem;
@@ -12,7 +12,6 @@ textarea {
 
 button,
 label {
-  color: var(--bgcolor-accent);
   display: block;
   font-family: monospace;
   font-size: 1.6rem;
@@ -21,12 +20,16 @@ label {
   text-indent: 0;
 }
 
+label {
+  color: var(--bgcolor-accent);
+}
+
 input[type="password"],
 input[type="text"] {
   border: .2rem solid #b7b7b7;
   border-radius: .2rem;
   display: block;
-  outline-color: rgb(102, 102, 102);
+  margin: 0;
   width: 100%;
 }
 input[type="password"]:focus,
@@ -39,16 +42,19 @@ input[type="text"]:focus {
   align-items: center;
   display: flex;
   justify-content: flex-end;
+  margin-top: 2rem;
   min-height: 3.2rem;
 }
-.buttons-bottombar {
-  bottom: 2rem;
-  padding: 0 1rem;
-  position: sticky;
+
+button {
+  background-color: var(--bgcolor-accent);
+  border: none;
+  border-radius: .2rem;
+  cursor: pointer;
+  outline-offset: 1px;
 }
-.buttons-bottombar button {
-  font-size: 2rem;
-  margin: 1rem;
+
+button:focus {
 }
 
 .button-inline {
@@ -56,14 +62,6 @@ input[type="text"]:focus {
   color: var(--color);
   display: inline;
   padding: .3rem;
-}
-
-button {
-  background-color: var(--bgcolor-accent);
-  border: none;
-  border-radius: .2rem;
-  color: white;
-  cursor: pointer;
 }
 
 button:disabled {
@@ -79,4 +77,22 @@ button:disabled {
 .form-status {
   flex-grow: 1;
   padding: 1rem 1.8rem;
+}
+
+.form-inline {
+  display: flex;
+  flex-grow: 1;
+  gap: 1rem;
+}
+
+.form-inline input[type=text] {
+  flex-grow: 1;
+}
+
+.form-inline button {
+  flex-grow: 0;
+}
+
+.focus-active {
+
 }
