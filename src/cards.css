@@ -3,16 +3,16 @@
   align-items: center;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 1rem;
 }
 
 .mbox .mbox-img {
-  align-self: flex-start;
-  flex-basis: 64px;
-  height: 64px;
+  align-self: center;
+  flex-basis: 4ch;
+  height: 4ch;
   margin-right: 1rem;
-  width: 64px;
+  max-width: 4ch;
 }
 
 .mbox .mbox-header {
@@ -27,5 +27,5 @@
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
-  max-width: 84ch;
+  max-width: 96ch;
 }
