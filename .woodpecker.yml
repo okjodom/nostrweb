@@ -24,3 +24,13 @@ pipeline:
       base_url: https://git.qcode.ch
       files: nostrweb.tar.gz
       note: "automated release by ${CI_SYSTEM_HOST} \nbuild id: ${CI_BUILD_NUMBER}"
+  rsync_dist:
+    when:
+      branch: master
+      event: tag
+      tag: v*
+    image: alpine:3.16.2
+    secrets: [releaser_ssh_key]
+    commands:
+      - apk add --no-cache --quiet openssh-client rsync
+      - tools/ci-rsync-release.sh
