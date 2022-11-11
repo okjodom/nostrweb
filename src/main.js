@@ -1,16 +1,15 @@
 import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tools';
 import {elem} from './domutil.js';
-
+// curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 // read only
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 // pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
-// pool.addRelay('wss://nostr-relay.untethr.me', {read: true, write: false});
 
 const feedlist = document.querySelector('#feedlist');
 
@@ -41,19 +40,23 @@ function onEvent(evt, relay) {
     case 2:
       renderRecommendServer(evt, relay);
       break;
+    case 3:
+      updateContactList(evt, relay);
+      break;
     default:
       console.log(`TODO: add support for event kind ${evt.kind}`, evt)
   }
 }
 
 const pubkey = localStorage.getItem('pub_key')
+console.log({pubkey})
 
 const subscription = pool.sub({
   cb: onEvent,
   filter: {
     authors: [
-      '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
-      'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
+      // '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
+      // 'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
       '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
       pubkey, // me
       // '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245'  // jb55
@@ -62,12 +65,18 @@ const subscription = pool.sub({
 });
 
 function renderTextNote(evt, relay) {
+  if (evt.tags.length) {
+    console.log('has tags', evt)
+  }
   const [host, img, time, userName] = getMetadata(evt, relay);
-  const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
-    elem('header', {className: 'mbox-header'}, [
-      elem('strong', {}, userName),
-      elem('small', {},` on ${host}`),
-    ]),
+  const style = evt.tags.some(tag => tag[0] === 'e') && 'padding-left: 2rem';
+  const body = elem('div', {
+    className: 'mbox-body',
+    title: dateTime.format(time),
+    ...(style && {style})
+  }, [
+    renderProfile(userName, host),
+    elem('div', {}, evt.id),
     evt.content // text
   ]);
   rendernArticle([img, body]);
@@ -76,13 +85,16 @@ function renderTextNote(evt, relay) {
 function renderRecommendServer(evt, relay) {
   const [host, img, time, userName] = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
-    elem('header', {className: 'mbox-header'}, [
-      elem('strong', {}, userName),
-      elem('small', {},` on ${host}`),
-    ]),
+    renderProfile(userName, host),
     `recommends server: ${evt.content}`
   ]);
   rendernArticle([img, body]);
+}
+
+function renderProfile(userName, host) {
+  return elem('header', {className: 'mbox-header'}, [
+    elem('small', {}, [elem('strong', {}, userName), ` on ${host}`]),
+  ]);
 }
 
 function rendernArticle(content) {
@@ -93,7 +105,7 @@ function rendernArticle(content) {
 function getMetadata(evt, relay) {
   const {host} = new URL(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = user?.metadata[relay]?.picture || 'bubble.svg';
+  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = elem('img', {
@@ -105,6 +117,8 @@ function getMetadata(evt, relay) {
   const time = new Date(evt.created_at * 1000);
   return [host, img, time, userName];
 }
+
+const tempContactList = {};
 
 function setMetadata(userList, relay, evt, content) {
   const user = userList.find(u => u.pubkey === evt.pubkey);
@@ -121,6 +135,23 @@ function setMetadata(userList, relay, evt, content) {
       timestamp: evt.created_at,
       ...content,
     };
+  }
+  if (tempContactList[relay]) {
+    const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
+    if (updates) {
+      console.log('TODO: add contact list (kind 3)', updates);
+    }
+  }
+}
+
+function updateContactList(evt, relay) {
+  const user = userList.find(u => u.pupkey === evt.pubkey);
+  if (user) {
+    console.log(`TODO: add contact list for ${evt.pubkey.slice(0, 8)} on ${relay}`, evt.tags);
+  } else {
+    tempContactList[relay] = tempContactList[relay]
+      ? [...tempContactList[relay], evt]
+      : [evt];
   }
 }
 
