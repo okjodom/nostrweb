@@ -11,13 +11,11 @@ pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 // pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
 
-const feedlist = document.querySelector('#feedlist');
 
 const dateTime = new Intl.DateTimeFormat(navigator.language, {
   dateStyle: 'full',
   timeStyle: 'long',
 });
-
 const userList = [];
 let max = 0;
 
@@ -69,17 +67,13 @@ function renderTextNote(evt, relay) {
     console.log('has tags', evt)
   }
   const [host, img, time, userName] = getMetadata(evt, relay);
-  const style = evt.tags.some(tag => tag[0] === 'e') && 'padding-left: 2rem';
-  const body = elem('div', {
-    className: 'mbox-body',
-    title: dateTime.format(time),
-    ...(style && {style})
-  }, [
+  const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
     renderProfile(userName, host),
     elem('div', {}, evt.id),
     evt.content // text
   ]);
-  rendernArticle([img, body]);
+  const isReply = evt.tags.some(tag => tag[0] === 'e');
+  rendernArticle([img, body], isReply && {className: 'mbox-reply'});
 }
 
 function renderRecommendServer(evt, relay) {
@@ -97,9 +91,12 @@ function renderProfile(userName, host) {
   ]);
 }
 
-function rendernArticle(content) {
-  const art = elem('article', {className: 'mbox'}, content);
-  feedlist.prepend(art);
+const feedContainer = document.querySelector('#feed');
+
+function rendernArticle(content, props) {
+  const className = ['mbox', props?.className].join(' ');
+  const art = elem('article', {...props, className}, content);
+  feedContainer.prepend(art);
 }
 
 function getMetadata(evt, relay) {
