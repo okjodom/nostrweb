@@ -13,6 +13,10 @@
 export function elem(name = 'div', props = {}, children = []) {
     const el = document.createElement(name);
     Object.assign(el, props);
-    el.append(...children);
+    if (typeof children === 'string') {
+        el.append(children);
+    } else {
+        el.append(...children);
+    }
     return el;
 }
