@@ -41,4 +41,5 @@ release artifact. the release is named after the tag name.
 
 the idea is that nostr web instances are then notified about a new release,
 download the tar.gz archive and update their local copies.
-this is not yet implemented.
+this is not yet implemented. at the moment, the CI symply rsync's dist/ with
+a remote on https://nostr.ch.
