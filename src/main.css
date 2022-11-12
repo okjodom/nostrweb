@@ -58,7 +58,8 @@ body {
   line-height: 1.5;
 }
 
-small {
+small,
+time {
   font-size: var(--font-small);
 }
 

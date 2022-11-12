@@ -11,10 +11,9 @@ pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 // pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
 
-
 const dateTime = new Intl.DateTimeFormat(navigator.language, {
-  dateStyle: 'full',
-  timeStyle: 'long',
+  dateStyle: 'short',
+  timeStyle: 'short',
 });
 const userList = [];
 let max = 0;
@@ -56,25 +55,28 @@ const subscription = pool.sub({
       // '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
       // 'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
       '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
-      pubkey, // me
+      '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38' // x1ddos
+      // pubkey, // me
       // '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245'  // jb55
-    ]
+    ],
+    limit: 100,
   }
 });
 
+// feed
 const hasEventTag = tag => tag[0] === 'e';
 const getShortTagId = tag => `${tag[1].slice(0, 7)}${tag[2] ? '@' + tag[2] : ''}`;
 
 function renderTextNote(evt, relay) {
-  if (evt.tags.length) {
-    console.log('has tags', evt)
-  }
   const [host, img, time, userName] = getMetadata(evt, relay);
   const isReply = evt.tags.some(hasEventTag);
-  const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
+  const body = elem('div', {className: 'mbox-body'}, [
     renderProfile(userName, host),
-    elem('div', {}, isReply ? `reply to ${evt.tags.filter(hasEventTag).map(getShortTagId).join(' and ')}` : evt.id),
-    evt.content // text
+    elem('div', {}, [
+      elem('small', {}, isReply ? `reply to ${evt.tags.filter(hasEventTag).map(getShortTagId).join(' and ')}` : evt.id),
+      elem('time', {dateTime: time, title: time}, ` on ${dateTime.format(time)}`),
+    ]),
+    evt.content, // text
   ]);
   rendernArticle([img, body], isReply && {className: 'mbox-reply'});
 }
