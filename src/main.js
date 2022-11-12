@@ -62,17 +62,20 @@ const subscription = pool.sub({
   }
 });
 
+const hasEventTag = tag => tag[0] === 'e';
+const getShortTagId = tag => `${tag[1].slice(0, 7)}${tag[2] ? '@' + tag[2] : ''}`;
+
 function renderTextNote(evt, relay) {
   if (evt.tags.length) {
     console.log('has tags', evt)
   }
   const [host, img, time, userName] = getMetadata(evt, relay);
+  const isReply = evt.tags.some(hasEventTag);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
     renderProfile(userName, host),
-    elem('div', {}, evt.id),
+    elem('div', {}, isReply ? `reply to ${evt.tags.filter(hasEventTag).map(getShortTagId).join(' and ')}` : evt.id),
     evt.content // text
   ]);
-  const isReply = evt.tags.some(tag => tag[0] === 'e');
   rendernArticle([img, body], isReply && {className: 'mbox-reply'});
 }
 
