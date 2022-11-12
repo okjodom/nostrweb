@@ -85,12 +85,12 @@ function renderRecommendServer(evt, relay) {
     renderProfile(userName, host),
     `recommends server: ${evt.content}`
   ]);
-  rendernArticle([img, body]);
+  rendernArticle([img, body], {className: 'mbox-recommend-server'});
 }
 
 function renderProfile(userName, host) {
   return elem('header', {className: 'mbox-header'}, [
-    elem('small', {}, [elem('strong', {}, userName), ` on ${host}`]),
+    elem('small', {}, [elem('strong', {}, userName), ` on ${host} `]),
   ]);
 }
 

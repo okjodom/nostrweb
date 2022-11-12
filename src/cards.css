@@ -19,17 +19,27 @@
   max-width: 4ch;
 }
 
-.mbox .mbox-header {
+.mbox-body {
+  color: var(--color-accent);
+  flex-basis: calc(100% - 64px - 1rem);
+  flex-grow: 0;
+  flex-shrink: 1;
+  max-width: 96ch;
+}
+
+.mbox-header {
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
   margin-top: 0;
 }
 
-.mbox .mbox-body {
-  color: var(--color-accent);
-  flex-basis: calc(100% - 64px - 1rem);
-  flex-grow: 0;
-  flex-shrink: 1;
-  max-width: 96ch;
+.mbox-recommend-server .mbox-body {
+  display: block;
+  flex-basis: 100%;
+  font-size: var(--font-small);
+}
+
+.mbox-recommend-server .mbox-header {
+  display: inline;
 }
