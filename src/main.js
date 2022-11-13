@@ -15,7 +15,6 @@ const dateTime = new Intl.DateTimeFormat(navigator.language, {
   dateStyle: 'short',
   timeStyle: 'short',
 });
-const userList = [];
 let max = 0;
 
 function onEvent(evt, relay) {
@@ -24,12 +23,7 @@ function onEvent(evt, relay) {
   }
   switch (evt.kind) {
     case 0:
-      try {
-        const content = JSON.parse(evt.content);
-        setMetadata(userList, relay, evt, content);
-      } catch(err) {
-        console.error(err);
-      }
+      handleMetadata(evt, relay);
       break;
     case 1:
       renderTextNote(evt, relay);
@@ -104,25 +98,20 @@ function rendernArticle(content, props) {
   feedContainer.prepend(art);
 }
 
-function getMetadata(evt, relay) {
-  const {host} = new URL(relay);
-  const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // enable pic once we have proxy
-  const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
-  const userAbout = user?.metadata[relay]?.about || '';
-  const img = elem('img', {
-    className: 'mbox-img',
-    src: userImg,
-    alt: `${userName}@${host}`,
-    title: userAbout},
-    '');
-  const time = new Date(evt.created_at * 1000);
-  return [host, img, time, userName];
-}
-
+const userList = [];
 const tempContactList = {};
 
-function setMetadata(userList, relay, evt, content) {
+function handleMetadata(evt, relay) {
+  try {
+    const content = JSON.parse(evt.content);
+    setMetadata(evt, relay, content);
+  } catch(err) {
+    console.log(evt);
+    console.error(err);
+  }
+}
+
+function setMetadata(evt, relay, content) {
   const user = userList.find(u => u.pubkey === evt.pubkey);
   if (!user) {
     userList.push({
@@ -144,6 +133,22 @@ function setMetadata(userList, relay, evt, content) {
       console.log('TODO: add contact list (kind 3)', updates);
     }
   }
+}
+
+function getMetadata(evt, relay) {
+  const {host} = new URL(relay);
+  const user = userList.find(user => user.pubkey === evt.pubkey);
+  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // enable pic once we have proxy
+  const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
+  const userAbout = user?.metadata[relay]?.about || '';
+  const img = elem('img', {
+    className: 'mbox-img',
+    src: userImg,
+    alt: `${userName}@${host}`,
+    title: userAbout},
+    '');
+  const time = new Date(evt.created_at * 1000);
+  return [host, img, time, userName];
 }
 
 function updateContactList(evt, relay) {
