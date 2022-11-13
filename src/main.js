@@ -4,7 +4,7 @@ import {elem} from './domutil.js';
 const pool = relayPool();
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 // read only
@@ -35,7 +35,7 @@ function onEvent(evt, relay) {
       updateContactList(evt, relay);
       break;
     default:
-      console.log(`TODO: add support for event kind ${evt.kind}`, evt)
+      // console.log(`TODO: add support for event kind ${evt.kind}`, evt)
   }
 }
 
@@ -100,7 +100,7 @@ function renderFeed() {
     } else {
       feedDomMap[sortedFeeds[i - 1].id].before(art);
       console.log(
-        dateTime.format(sortedFeeds[i + 1].created_at * 1000),
+        dateTime.format(sortedFeeds[i - 1].created_at * 1000),
         ' > ',
         dateTime.format(textNoteEvent.created_at * 1000),
       )
@@ -234,30 +234,48 @@ function updateContactList(evt, relay) {
 
 // check pool.status
 
-// publish
+// send
+const sendStatus = document.querySelector('#sendstatus');
+const onSendError = err => {
+  sendStatus.textContent = err.message;
+  sendStatus.hidden = false;
+};
 const publish = document.querySelector('#publish');
 publish.addEventListener('click', async () => {
   const pubkey = localStorage.getItem('pub_key');
   const privatekey = localStorage.getItem('private_key');
   if (!pubkey || !privatekey) {
-    return console.warn('no pubkey/privatekey');
+    return onSendError(new Error('no pubkey/privatekey'));
+  }
+  if (!input.value) {
+    return onSendError(new Error('message is empty'));
   }
   const newEvent = {
     kind: 1,
     pubkey,
-    content: 'geil',
+    content: input.value,
     tags: [],
     created_at: Math.floor(Date.now() * 0.001),
   };
-  const sig = await signEvent(newEvent, privatekey);
-  const ev = await pool.publish({...newEvent, sig}, (status, url) => {
-    if (status === 0) {
-      console.log(`publish request sent to ${url}`)
-    }
-    if (status === 1) {
-      console.log(`event published by ${url}`, ev)
-    }
-  });
+  const sig = await signEvent(newEvent, privatekey).catch(onSendError);
+  if (sig) {
+    const ev = await pool.publish({...newEvent, sig}, (status, url) => {
+      if (status === 0) {
+        console.info(`publish request sent to ${url}`);
+      }
+      if (status === 1) {
+        sendStatus.hidden = true;
+        input.value = '';
+        publish.disabled = true;
+        console.info(`event published by ${url}`, ev);
+      }
+    });
+  }
+});
+
+const input = document.querySelector('input[name="message"]');
+input.addEventListener('input', () => {
+  publish.disabled = !input.value;
 });
 
 // settings
