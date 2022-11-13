@@ -4,21 +4,21 @@ import {elem} from './domutil.js';
 const pool = relayPool();
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 // read only
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 // pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
 
-const dateTime = new Intl.DateTimeFormat(navigator.language, {
+const dateTime = new Intl.DateTimeFormat('de-ch' /* navigator.language */, {
   dateStyle: 'short',
-  timeStyle: 'short',
+  timeStyle: 'medium',
 });
 let max = 0;
 
 function onEvent(evt, relay) {
-  if (max++ >= 23) {
+  if (max++ >= 2123) {
     return subscription.unsub();
   }
   switch (evt.kind) {
@@ -29,7 +29,7 @@ function onEvent(evt, relay) {
       handleTextNote(evt, relay);
       break;
     case 2:
-      feedContainer.prepend(renderRecommendServer(evt, relay));
+      handleRecommendServer(evt, relay);
       break;
     case 3:
       updateContactList(evt, relay);
@@ -39,21 +39,20 @@ function onEvent(evt, relay) {
   }
 }
 
-const pubkey = localStorage.getItem('pub_key')
-console.log({pubkey})
+// const pubkey = localStorage.getItem('pub_key')
 
 const subscription = pool.sub({
   cb: onEvent,
   filter: {
-    authors: [
-      // '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
-      // 'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
-      '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
-      '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38' // x1ddos
-      // pubkey, // me
-      // '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245'  // jb55
-    ],
-    limit: 100,
+    // authors: [
+    //   '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
+    //   'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
+    //   '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
+    //   '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // x1ddos
+    //   // pubkey, // me
+    //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
+    // ],
+    limit: 2000,
   }
 });
 
@@ -62,35 +61,33 @@ const replyList = [];
 const eventRelayMap = {};
 const hasEventTag = tag => tag[0] === 'e';
 
-let debounceRenderFeedTimer;
 function handleTextNote(evt, relay) {
   if (eventRelayMap[evt.id]) {
     eventRelayMap[evt.id] = [relay, ...(eventRelayMap[evt.id])];
   } else {
     eventRelayMap[evt.id] = [relay];
     (evt.tags.some(hasEventTag) ? replyList : textNoteList).push(evt);
-    clearTimeout(debounceRenderFeedTimer);
-    debounceRenderFeedTimer = setTimeout(renderFeed, 200);
+    renderFeed()
   }
 }
 
 // feed
 const feedContainer = document.querySelector('#feed');
 const feedDomMap = {};
+const sortByCreatedAt = (evt1, evt2) => {
+  if (evt1.created_at ===  evt2.created_at) {
+    //console.log('OMG exactly at the same time', evt1, evt2);
+  }
+  return evt1.created_at > evt2.created_at ? -1 : 1;
+};
 
 let debounceDebugMessageTimer;
 function renderFeed() {
-  const sortedFeeds = textNoteList.sort((evt1, evt2) => {
-    if (evt1.created_at ===  evt2.created_at) {
-      console.log('OMG exactly at the same time', evt1, evt2);
-    }
-    return evt1.created_at > evt2.created_at ? -1 : 1;
-  });
-
+  const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
   clearTimeout(debounceDebugMessageTimer);
   debounceDebugMessageTimer = setTimeout(() => {
     console.log(`${sortedFeeds.map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
-  }, 1000);
+  }, 2000);
   sortedFeeds.forEach((textNoteEvent, i) => {
     if (feedDomMap[textNoteEvent.id]) {
       // TODO check eventRelayMap if event was published to different relays
@@ -99,9 +96,14 @@ function renderFeed() {
     const art = renderTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
     feedDomMap[textNoteEvent.id] = art;
     if (i === 0) {
-      feedContainer.prepend(art);
+      feedContainer.append(art);
     } else {
-      feedDomMap[sortedFeeds[i - 1].id].after(art);
+      feedDomMap[sortedFeeds[i - 1].id].before(art);
+      console.log(
+        dateTime.format(sortedFeeds[i + 1].created_at * 1000),
+        ' > ',
+        dateTime.format(textNoteEvent.created_at * 1000),
+      )
       // feedContainer.insertBefore(art, feedDomMap[sortedFeeds[i - 1].id]);
       //feedDomMap[sortedFeeds[i - 1].id].after(art);
     }
@@ -124,6 +126,28 @@ function renderTextNote(evt, relay) {
   return rendernArticle([img, body], isReply && {className: 'mbox-reply'});
 }
 
+function handleRecommendServer(evt, relay) {
+  if (feedDomMap[evt.id]) {
+    // TODO event might also be published to different relays
+    return;
+  }
+  const art = renderRecommendServer(evt, relay);
+  if (textNoteList.length < 2) {
+    console.log('prob does happen often')
+    feedContainer.append(art);
+    return;
+  }
+  const closestTextNotes = textNoteList.sort((evt1, evt2) => {
+    if (Math.abs(evt1.created_at - evt.created_at) < Math.abs(evt2.created_at - evt.created_at)) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+  feedDomMap[closestTextNotes[0].id].after(art);
+  feedDomMap[evt.id] = art;
+}
+
 function renderRecommendServer(evt, relay) {
   const [host, img, time, userName] = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
@@ -138,7 +162,6 @@ function renderProfile(userName, host) {
     elem('small', {}, [elem('strong', {}, userName), ` on ${host} `]),
   ]);
 }
-
 
 function rendernArticle(content, props) {
   const className = ['mbox', props?.className].join(' ');
