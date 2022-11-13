@@ -26,10 +26,10 @@ function onEvent(evt, relay) {
       handleMetadata(evt, relay);
       break;
     case 1:
-      renderTextNote(evt, relay);
+      handleTextNote(evt, relay);
       break;
     case 2:
-      renderRecommendServer(evt, relay);
+      feedContainer.prepend(renderRecommendServer(evt, relay));
       break;
     case 3:
       updateContactList(evt, relay);
@@ -57,8 +57,57 @@ const subscription = pool.sub({
   }
 });
 
-// feed
+const textNoteList = [];
+const replyList = [];
+const eventRelayMap = {};
 const hasEventTag = tag => tag[0] === 'e';
+
+let debounceRenderFeedTimer;
+function handleTextNote(evt, relay) {
+  if (eventRelayMap[evt.id]) {
+    eventRelayMap[evt.id] = [relay, ...(eventRelayMap[evt.id])];
+  } else {
+    eventRelayMap[evt.id] = [relay];
+    (evt.tags.some(hasEventTag) ? replyList : textNoteList).push(evt);
+    clearTimeout(debounceRenderFeedTimer);
+    debounceRenderFeedTimer = setTimeout(renderFeed, 200);
+  }
+}
+
+// feed
+const feedContainer = document.querySelector('#feed');
+const feedDomMap = {};
+
+let debounceDebugMessageTimer;
+function renderFeed() {
+  const sortedFeeds = textNoteList.sort((evt1, evt2) => {
+    if (evt1.created_at ===  evt2.created_at) {
+      console.log('OMG exactly at the same time', evt1, evt2);
+    }
+    return evt1.created_at > evt2.created_at ? -1 : 1;
+  });
+
+  clearTimeout(debounceDebugMessageTimer);
+  debounceDebugMessageTimer = setTimeout(() => {
+    console.log(`${sortedFeeds.map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
+  }, 1000);
+  sortedFeeds.forEach((textNoteEvent, i) => {
+    if (feedDomMap[textNoteEvent.id]) {
+      // TODO check eventRelayMap if event was published to different relays
+      return;
+    }
+    const art = renderTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
+    feedDomMap[textNoteEvent.id] = art;
+    if (i === 0) {
+      feedContainer.prepend(art);
+    } else {
+      feedDomMap[sortedFeeds[i - 1].id].after(art);
+      // feedContainer.insertBefore(art, feedDomMap[sortedFeeds[i - 1].id]);
+      //feedDomMap[sortedFeeds[i - 1].id].after(art);
+    }
+  });
+}
+
 const getShortTagId = tag => `${tag[1].slice(0, 7)}${tag[2] ? '@' + tag[2] : ''}`;
 
 function renderTextNote(evt, relay) {
@@ -72,7 +121,7 @@ function renderTextNote(evt, relay) {
     ]),
     evt.content, // text
   ]);
-  rendernArticle([img, body], isReply && {className: 'mbox-reply'});
+  return rendernArticle([img, body], isReply && {className: 'mbox-reply'});
 }
 
 function renderRecommendServer(evt, relay) {
@@ -81,7 +130,7 @@ function renderRecommendServer(evt, relay) {
     renderProfile(userName, host),
     `recommends server: ${evt.content}`
   ]);
-  rendernArticle([img, body], {className: 'mbox-recommend-server'});
+  return rendernArticle([img, body], {className: 'mbox-recommend-server'});
 }
 
 function renderProfile(userName, host) {
@@ -90,12 +139,10 @@ function renderProfile(userName, host) {
   ]);
 }
 
-const feedContainer = document.querySelector('#feed');
 
 function rendernArticle(content, props) {
   const className = ['mbox', props?.className].join(' ');
-  const art = elem('article', {...props, className}, content);
-  feedContainer.prepend(art);
+  return elem('article', {...props, className}, content);
 }
 
 const userList = [];
