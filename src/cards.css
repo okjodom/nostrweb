@@ -12,10 +12,11 @@
 }
 
 .mbox .mbox-img {
-  align-self: center;
+  align-self: start;
   flex-basis: 4ch;
   height: 4ch;
   margin-right: 1rem;
+  margin-top: .5ch;
   max-width: 4ch;
 }
 

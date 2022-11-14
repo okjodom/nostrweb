@@ -3,7 +3,7 @@ import {elem} from './domutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
-// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
+pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
 // pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
@@ -35,7 +35,7 @@ function onEvent(evt, relay) {
       updateContactList(evt, relay);
       break;
     default:
-      // console.log(`TODO: add support for event kind ${evt.kind}`, evt)
+      console.log(`TODO: add support for event kind ${evt.kind}`, evt)
   }
 }
 
@@ -67,7 +67,7 @@ function handleTextNote(evt, relay) {
   } else {
     eventRelayMap[evt.id] = [relay];
     (evt.tags.some(hasEventTag) ? replyList : textNoteList).push(evt);
-    renderFeed()
+    renderFeed();
   }
 }
 
@@ -76,18 +76,18 @@ const feedContainer = document.querySelector('#feed');
 const feedDomMap = {};
 const sortByCreatedAt = (evt1, evt2) => {
   if (evt1.created_at ===  evt2.created_at) {
-    //console.log('OMG exactly at the same time', evt1, evt2);
+    // console.log('TODO: OMG exactly at the same time, figure out how to sort then', evt1, evt2);
   }
   return evt1.created_at > evt2.created_at ? -1 : 1;
 };
 
-let debounceDebugMessageTimer;
+// let debounceDebugMessageTimer;
 function renderFeed() {
   const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
-  clearTimeout(debounceDebugMessageTimer);
-  debounceDebugMessageTimer = setTimeout(() => {
-    console.log(`${sortedFeeds.map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
-  }, 2000);
+  // clearTimeout(debounceDebugMessageTimer);
+  // debounceDebugMessageTimer = setTimeout(() => {
+  //   console.log(`${sortedFeeds.map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
+  // }, 2000);
   sortedFeeds.forEach((textNoteEvent, i) => {
     if (feedDomMap[textNoteEvent.id]) {
       // TODO check eventRelayMap if event was published to different relays
@@ -99,13 +99,6 @@ function renderFeed() {
       feedContainer.append(art);
     } else {
       feedDomMap[sortedFeeds[i - 1].id].before(art);
-      console.log(
-        dateTime.format(sortedFeeds[i - 1].created_at * 1000),
-        ' > ',
-        dateTime.format(textNoteEvent.created_at * 1000),
-      )
-      // feedContainer.insertBefore(art, feedDomMap[sortedFeeds[i - 1].id]);
-      //feedDomMap[sortedFeeds[i - 1].id].after(art);
     }
   });
 }
@@ -133,7 +126,6 @@ function handleRecommendServer(evt, relay) {
   }
   const art = renderRecommendServer(evt, relay);
   if (textNoteList.length < 2) {
-    console.log('prob does happen often')
     feedContainer.append(art);
     return;
   }
@@ -152,7 +144,7 @@ function renderRecommendServer(evt, relay) {
   const [host, img, time, userName] = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
     renderProfile(userName, host),
-    `recommends server: ${evt.content}`
+    `recommends server: ${evt.content}`,
   ]);
   return rendernArticle([img, body], {className: 'mbox-recommend-server'});
 }
@@ -208,7 +200,7 @@ function setMetadata(evt, relay, content) {
 function getMetadata(evt, relay) {
   const {host} = new URL(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // enable pic once we have proxy
+  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // TODO: enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = elem('img', {
@@ -274,9 +266,7 @@ publish.addEventListener('click', async () => {
 });
 
 const input = document.querySelector('input[name="message"]');
-input.addEventListener('input', () => {
-  publish.disabled = !input.value;
-});
+input.addEventListener('input', () => publish.disabled = !input.value);
 
 // settings
 const form = document.querySelector('form[name="settings"]');
@@ -285,7 +275,7 @@ const pubKeyInput = form.querySelector('#pubkey');
 const statusMessage = form.querySelector('#keystatus');
 const generateBtn = form.querySelector('button[name="generate"]');
 const importBtn = form.querySelector('button[name="import"]');
-const privateTgl = form.querySelector('button[name="privatekey-toggle"]')
+const privateTgl = form.querySelector('button[name="privatekey-toggle"]');
 
 generateBtn.addEventListener('click', () => {
   const privatekey = generatePrivateKey();
