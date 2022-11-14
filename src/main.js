@@ -104,6 +104,9 @@ function renderFeed() {
 }
 
 const getShortTagId = tag => `${tag[1].slice(0, 7)}${tag[2] ? '@' + tag[2] : ''}`;
+const sortCreatedAt = ({created_at: a}, {created_at: b}) => (
+  Math.abs(a - evt.created_at) < Math.abs(b - evt.created_at) ? -1 : 1
+);
 
 function renderTextNote(evt, relay) {
   const [host, img, time, userName] = getMetadata(evt, relay);
@@ -129,13 +132,7 @@ function handleRecommendServer(evt, relay) {
     feedContainer.append(art);
     return;
   }
-  const closestTextNotes = textNoteList.sort((evt1, evt2) => {
-    if (Math.abs(evt1.created_at - evt.created_at) < Math.abs(evt2.created_at - evt.created_at)) {
-      return -1;
-    } else {
-      return 1;
-    }
-  });
+  const closestTextNotes = textNoteList.sort(sortCreatedAt);
   feedDomMap[closestTextNotes[0].id].after(art);
   feedDomMap[evt.id] = art;
 }
