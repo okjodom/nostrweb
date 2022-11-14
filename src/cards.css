@@ -7,10 +7,6 @@
   margin-bottom: 1rem;
 }
 
-.mbox-reply {
-  padding-left: 4ch;
-}
-
 .mbox .mbox-img {
   align-self: start;
   flex-basis: 4ch;

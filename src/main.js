@@ -3,9 +3,9 @@ import {elem} from './domutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
-pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
-// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
+// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
+pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 // read only
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
@@ -18,7 +18,7 @@ const dateTime = new Intl.DateTimeFormat('de-ch' /* navigator.language */, {
 let max = 0;
 
 function onEvent(evt, relay) {
-  if (max++ >= 2123) {
+  if (max++ >= 223) {
     return subscription.unsub();
   }
   switch (evt.kind) {
@@ -35,7 +35,7 @@ function onEvent(evt, relay) {
       updateContactList(evt, relay);
       break;
     default:
-      console.log(`TODO: add support for event kind ${evt.kind}`, evt)
+      // console.log(`TODO: add support for event kind ${evt.kind}`/*, evt*/)
   }
 }
 
@@ -52,7 +52,7 @@ const subscription = pool.sub({
     //   // pubkey, // me
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
-    limit: 2000,
+    limit: 200,
   }
 });
 
@@ -66,7 +66,14 @@ function handleTextNote(evt, relay) {
     eventRelayMap[evt.id] = [relay, ...(eventRelayMap[evt.id])];
   } else {
     eventRelayMap[evt.id] = [relay];
-    (evt.tags.some(hasEventTag) ? replyList : textNoteList).push(evt);
+    if (evt.tags.some(hasEventTag)) {
+      replyList.push(evt)
+      if (feedDomMap[evt.tags[0][1]]) {
+        console.log('CALL ME', evt.tags[0][1], feedDomMap[evt.tags[0][1]]);
+      }
+    } else {
+      textNoteList.push(evt);
+    }
     renderFeed();
   }
 }
@@ -81,45 +88,57 @@ const sortByCreatedAt = (evt1, evt2) => {
   return evt1.created_at > evt2.created_at ? -1 : 1;
 };
 
-// let debounceDebugMessageTimer;
+let debounceDebugMessageTimer;
 function renderFeed() {
   const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
-  // clearTimeout(debounceDebugMessageTimer);
-  // debounceDebugMessageTimer = setTimeout(() => {
-  //   console.log(`${sortedFeeds.map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
-  // }, 2000);
+  // debug
+  clearTimeout(debounceDebugMessageTimer);
+  debounceDebugMessageTimer = setTimeout(() => {
+    console.log(`${sortedFeeds.reverse().map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
+  }, 2000);
   sortedFeeds.forEach((textNoteEvent, i) => {
     if (feedDomMap[textNoteEvent.id]) {
       // TODO check eventRelayMap if event was published to different relays
       return;
     }
-    const art = renderTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
-    feedDomMap[textNoteEvent.id] = art;
+    const article = createTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
+    feedDomMap[textNoteEvent.id] = article;
     if (i === 0) {
-      feedContainer.append(art);
+      feedContainer.append(article);
     } else {
-      feedDomMap[sortedFeeds[i - 1].id].before(art);
+      feedDomMap[sortedFeeds[i - 1].id].before(article);
     }
   });
 }
 
-const getShortTagId = tag => `${tag[1].slice(0, 7)}${tag[2] ? '@' + tag[2] : ''}`;
-const sortCreatedAt = ({created_at: a}, {created_at: b}) => (
+const sortEventCreatedAt = (evt) => (
+  {created_at: a},
+  {created_at: b},
+) => (
   Math.abs(a - evt.created_at) < Math.abs(b - evt.created_at) ? -1 : 1
 );
 
-function renderTextNote(evt, relay) {
-  const [host, img, time, userName] = getMetadata(evt, relay);
-  const isReply = evt.tags.some(hasEventTag);
+function createTextNote(evt, relay) {
+  const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
+  const headerInfo = isReply ? [
+    elem('strong', {title: evt.pubkey}, userName)
+  ] : [
+    elem('strong', {title: evt.pubkey}, userName),
+    elem('span', {
+      title: `Event ${evt.id}
+      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}\n${time}`
+    }, ` on ${host} `),
+  ];
   const body = elem('div', {className: 'mbox-body'}, [
-    renderProfile(userName, host),
-    elem('div', {}, [
-      elem('small', {}, isReply ? `reply to ${evt.tags.filter(hasEventTag).map(getShortTagId).join(' and ')}` : evt.id),
-      elem('time', {dateTime: time, title: time}, ` on ${dateTime.format(time)}`),
+    elem('header', {
+      className: 'mbox-header',
+    }, [
+      elem('small', {}, headerInfo),
     ]),
     evt.content, // text
+    replies[0] ? elem('div', {className: 'mobx-replies'}, replies.map(e => createTextNote(e, relay))) : '',
   ]);
-  return rendernArticle([img, body], isReply && {className: 'mbox-reply'});
+  return rendernArticle([img, body]);
 }
 
 function handleRecommendServer(evt, relay) {
@@ -132,24 +151,23 @@ function handleRecommendServer(evt, relay) {
     feedContainer.append(art);
     return;
   }
-  const closestTextNotes = textNoteList.sort(sortCreatedAt);
+  const closestTextNotes = textNoteList.sort(sortEventCreatedAt(evt));
   feedDomMap[closestTextNotes[0].id].after(art);
   feedDomMap[evt.id] = art;
 }
 
 function renderRecommendServer(evt, relay) {
-  const [host, img, time, userName] = getMetadata(evt, relay);
+  const {host, img, time, userName} = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
-    renderProfile(userName, host),
+    elem('header', {className: 'mbox-header'}, [
+      elem('small', {}, [
+        elem('strong', {}, userName),
+        ` on ${host} `,
+      ]),
+    ]),
     `recommends server: ${evt.content}`,
   ]);
   return rendernArticle([img, body], {className: 'mbox-recommend-server'});
-}
-
-function renderProfile(userName, host) {
-  return elem('header', {className: 'mbox-header'}, [
-    elem('small', {}, [elem('strong', {}, userName), ` on ${host} `]),
-  ]);
 }
 
 function rendernArticle(content, props) {
@@ -189,25 +207,36 @@ function setMetadata(evt, relay, content) {
   if (tempContactList[relay]) {
     const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
     if (updates) {
-      console.log('TODO: add contact list (kind 3)', updates);
+      // console.log('TODO: add contact list (kind 3)', updates);
     }
   }
 }
 
+const getHost = (url) => {
+  try {
+    return new URL(url).host;
+  } catch(e) {
+    return false;
+  }
+}
+
 function getMetadata(evt, relay) {
-  const {host} = new URL(relay);
+  const host = getHost(relay[0]);
   const user = userList.find(user => user.pubkey === evt.pubkey);
   const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // TODO: enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
+  const isReply = evt.tags.some(hasEventTag);
   const img = elem('img', {
     className: 'mbox-img',
     src: userImg,
     alt: `${userName}@${host}`,
     title: userAbout},
-    '');
+    ''
+  );
+  const replies = replyList.filter((reply) => reply.tags[0][1] === evt.id);
   const time = new Date(evt.created_at * 1000);
-  return [host, img, time, userName];
+  return {host, img, isReply, replies, time, userName};
 }
 
 function updateContactList(evt, relay) {
