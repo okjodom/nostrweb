@@ -21,7 +21,7 @@
     --bgcolor-accent: #ff731d;
     --bgcolor-inactive: #bababa;
     --color: rgb(68 68 68);
-    --color-accent: rgb(0 0 0);
+    --color-accent: #ff731d;
     --bgcolor-danger: rgb(255 0 0);
   }
 }

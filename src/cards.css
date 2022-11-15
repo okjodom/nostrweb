@@ -17,11 +17,11 @@
 }
 
 .mbox-body {
-  color: var(--color-accent);
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
   max-width: 96ch;
+  word-break: break-word;
 }
 
 .mbox-header {
@@ -29,6 +29,10 @@
   flex-grow: 0;
   flex-shrink: 1;
   margin-top: 0;
+}
+.mbox-header time,
+.mbox-username {
+  color: var(--color-accent);
 }
 
 .mbox-recommend-server .mbox-body {

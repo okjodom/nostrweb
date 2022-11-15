@@ -21,7 +21,7 @@ label {
 }
 
 label {
-  color: var(--bgcolor-accent);
+  color: var(--color-accent);
 }
 
 input[type="password"],
@@ -52,6 +52,7 @@ button {
   border-radius: .2rem;
   cursor: pointer;
   outline-offset: 1px;
+  word-break: normal;
 }
 
 button:focus {

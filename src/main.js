@@ -1,26 +1,23 @@
 import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tools';
 import {elem} from './domutil.js';
+import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
-pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
-// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
+// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
 // read only
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
-// pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: false});
 
-const dateTime = new Intl.DateTimeFormat('de-ch' /* navigator.language */, {
-  dateStyle: 'short',
-  timeStyle: 'medium',
-});
+
 let max = 0;
 
 function onEvent(evt, relay) {
-  if (max++ >= 223) {
-    return subscription.unsub();
-  }
+  // if (max++ >= 223) {
+  //   return subscription.unsub();
+  // }
   switch (evt.kind) {
     case 0:
       handleMetadata(evt, relay);
@@ -52,7 +49,8 @@ const subscription = pool.sub({
     //   // pubkey, // me
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
-    limit: 200,
+    // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
+    limit: 2000,
   }
 });
 
@@ -67,10 +65,8 @@ function handleTextNote(evt, relay) {
   } else {
     eventRelayMap[evt.id] = [relay];
     if (evt.tags.some(hasEventTag)) {
-      replyList.push(evt)
-      if (feedDomMap[evt.tags[0][1]]) {
-        console.log('CALL ME', evt.tags[0][1], feedDomMap[evt.tags[0][1]]);
-      }
+      replyList.push(evt);
+      handleReply(evt, relay);
     } else {
       textNoteList.push(evt);
     }
@@ -88,62 +84,88 @@ const sortByCreatedAt = (evt1, evt2) => {
   return evt1.created_at > evt2.created_at ? -1 : 1;
 };
 
-let debounceDebugMessageTimer;
+// let debounceDebugMessageTimer;
 function renderFeed() {
   const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
   // debug
-  clearTimeout(debounceDebugMessageTimer);
-  debounceDebugMessageTimer = setTimeout(() => {
-    console.log(`${sortedFeeds.reverse().map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
-  }, 2000);
+  // clearTimeout(debounceDebugMessageTimer);
+  // debounceDebugMessageTimer = setTimeout(() => {
+  //   console.log(`${sortedFeeds.reverse().map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
+  // }, 2000);
   sortedFeeds.forEach((textNoteEvent, i) => {
     if (feedDomMap[textNoteEvent.id]) {
       // TODO check eventRelayMap if event was published to different relays
       return;
     }
     const article = createTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
-    feedDomMap[textNoteEvent.id] = article;
     if (i === 0) {
       feedContainer.append(article);
     } else {
       feedDomMap[sortedFeeds[i - 1].id].before(article);
     }
+    feedDomMap[textNoteEvent.id] = article;
   });
 }
 
-const sortEventCreatedAt = (evt) => (
-  {created_at: a},
-  {created_at: b},
-) => (
-  Math.abs(a - evt.created_at) < Math.abs(b - evt.created_at) ? -1 : 1
-);
+setInterval(() => {
+  document.querySelectorAll('time[datetime]').forEach(timeElem => {
+    timeElem.textContent = formatTime(new Date(timeElem.dateTime));
+  });
+}, 10000);
 
 function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
+  const name = elem('strong', {className: 'mbox-username', title: evt.pubkey}, userName);
+  const timeElem = elem('time', { dateTime: time.toISOString()}, formatTime(time));
   const headerInfo = isReply ? [
-    elem('strong', {title: evt.pubkey}, userName)
+    name, ' ', timeElem
   ] : [
-    elem('strong', {title: evt.pubkey}, userName),
+    name,
     elem('span', {
       title: `Event ${evt.id}
-      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}\n${time}`
+      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}`
     }, ` on ${host} `),
+    timeElem,
   ];
   const body = elem('div', {className: 'mbox-body'}, [
-    elem('header', {
-      className: 'mbox-header',
-    }, [
+    elem('header', {className: 'mbox-header'}, [
       elem('small', {}, headerInfo),
     ]),
     evt.content, // text
+    elem('br'),
+    elem('button', {
+      className: 'button-inline',
+      name: 'reply', type: 'button',
+      data: {'eventId': evt.id, relay}
+    }, [
+      elem('small', {}, 'reply')
+    ]),
     replies[0] ? elem('div', {className: 'mobx-replies'}, replies.map(e => createTextNote(e, relay))) : '',
   ]);
   return rendernArticle([img, body]);
 }
 
+function handleReply(evt, relay) {
+  const article = feedDomMap[evt.tags[0][1]];
+  if (article) {
+    let replyContainer = article.querySelector('.mobx-replies');
+    if (!replyContainer) {
+      replyContainer = elem('div', {className: 'mobx-replies'});
+      article.querySelector('.mbox-body').append(replyContainer);
+    }
+    replyContainer.append(createTextNote(evt, relay))
+  }
+}
+
+const sortEventCreatedAt = (created_at) => (
+  {created_at: a},
+  {created_at: b},
+) => (
+  Math.abs(a - created_at) < Math.abs(b - created_at) ? -1 : 1
+);
+
 function handleRecommendServer(evt, relay) {
   if (feedDomMap[evt.id]) {
-    // TODO event might also be published to different relays
     return;
   }
   const art = renderRecommendServer(evt, relay);
@@ -151,21 +173,20 @@ function handleRecommendServer(evt, relay) {
     feedContainer.append(art);
     return;
   }
-  const closestTextNotes = textNoteList.sort(sortEventCreatedAt(evt));
+  const closestTextNotes = textNoteList.sort(sortEventCreatedAt(evt.created_at));
   feedDomMap[closestTextNotes[0].id].after(art);
   feedDomMap[evt.id] = art;
 }
 
 function renderRecommendServer(evt, relay) {
-  const {host, img, time, userName} = getMetadata(evt, relay);
+  const {img, time, userName} = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
     elem('header', {className: 'mbox-header'}, [
       elem('small', {}, [
-        elem('strong', {}, userName),
-        ` on ${host} `,
+        elem('strong', {}, userName)
       ]),
     ]),
-    `recommends server: ${evt.content}`,
+    ` recommends server: ${evt.content}`,
   ]);
   return rendernArticle([img, body], {className: 'mbox-recommend-server'});
 }
@@ -215,13 +236,13 @@ function setMetadata(evt, relay, content) {
 const getHost = (url) => {
   try {
     return new URL(url).host;
-  } catch(e) {
-    return false;
+  } catch(err) {
+    return err;
   }
 }
 
 function getMetadata(evt, relay) {
-  const host = getHost(relay[0]);
+  const host = getHost(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
   const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // TODO: enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
@@ -231,9 +252,8 @@ function getMetadata(evt, relay) {
     className: 'mbox-img',
     src: userImg,
     alt: `${userName}@${host}`,
-    title: userAbout},
-    ''
-  );
+    title: userAbout,
+  }, '');
   const replies = replyList.filter((reply) => reply.tags[0][1] === evt.id);
   const time = new Date(evt.created_at * 1000);
   return {host, img, isReply, replies, time, userName};
@@ -252,6 +272,26 @@ function updateContactList(evt, relay) {
 
 // check pool.status
 
+// reply
+const writeForm = document.querySelector('#writeForm');
+const input = document.querySelector('input[name="message"]');
+let lastReplyBtn = null;
+let replyTo = null;
+feedContainer.addEventListener('click', (e) => {
+  const button = e.target.closest('button');
+  if (button && button.name === 'reply') {
+    if (lastReplyBtn) {
+      lastReplyBtn.hidden = false;
+    }
+    lastReplyBtn = button;
+    button.hidden = true;
+    button.after(writeForm);
+    writeForm.hidden = false;
+    replyTo = ['e', button.dataset.eventId, button.dataset.relay];
+    input.focus();
+  }
+});
+
 // send
 const sendStatus = document.querySelector('#sendstatus');
 const onSendError = err => {
@@ -268,11 +308,12 @@ publish.addEventListener('click', async () => {
   if (!input.value) {
     return onSendError(new Error('message is empty'));
   }
+  const tags = replyTo ? [replyTo] : [];
   const newEvent = {
     kind: 1,
     pubkey,
     content: input.value,
-    tags: [],
+    tags,
     created_at: Math.floor(Date.now() * 0.001),
   };
   const sig = await signEvent(newEvent, privatekey).catch(onSendError);
@@ -285,13 +326,18 @@ publish.addEventListener('click', async () => {
         sendStatus.hidden = true;
         input.value = '';
         publish.disabled = true;
-        console.info(`event published by ${url}`, ev);
+        if (lastReplyBtn) {
+          lastReplyBtn.hidden = false;
+          lastReplyBtn = null;
+          replyTo = null;
+          document.querySelector('#newMessage').append(writeForm);
+        }
+        // console.info(`event published by ${url}`, ev);
       }
     });
   }
 });
 
-const input = document.querySelector('input[name="message"]');
 input.addEventListener('input', () => publish.disabled = !input.value);
 
 // settings

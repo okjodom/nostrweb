@@ -10,13 +10,16 @@
  * @param {Array<HTMLElement|string>} children
  * @return HTMLElement
  */
-export function elem(name = 'div', props = {}, children = []) {
+export function elem(name = 'div', {data, ...props} = {}, children = []) {
     const el = document.createElement(name);
     Object.assign(el, props);
     if (typeof children === 'string') {
         el.append(children);
     } else {
         el.append(...children);
+    }
+    if (data) {
+        Object.entries(data).forEach(([key, value]) => el.dataset[key] = value);
     }
     return el;
 }

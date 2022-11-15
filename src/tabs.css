@@ -34,7 +34,7 @@
 
 .tab [type=radio]:checked ~ label {
   background-color: var(--bgcolor-accent);
-  color: var(--color-accent);
+  color: var(--color);
   z-index: 2;
 }
 
