@@ -53,16 +53,16 @@
       <div class="tab">
         <input type="radio" name="maintabs" id="settings">
         <label for="settings">settings</label>
-        <form name="settings" method="post" class="content">
+        <form action="#" name="settings" class="content">
           <label for="pubkey">public-key</label>
-          <input type="text" name="pubkey" id="pubkey">
+          <input type="text" id="pubkey">
           <label for="privatekey">
             private-key
             <button type="button" name="privatekey-toggle" class="button-inline" >
               <small>show</small>
             </button>
           </label>
-          <input type="password" name="privatekey" id="privatekey">
+          <input type="password" id="privatekey">
           <div class="buttons">
             <small id="keystatus" class="form-status" hidden></small>
             <button type="button" name="generate" tabindex="0">new</button>
