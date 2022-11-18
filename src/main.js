@@ -50,7 +50,7 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 2000,
+    limit: 100,
   }
 });
 
@@ -116,23 +116,21 @@ setInterval(() => {
 function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
   const name = elem('strong', {className: 'mbox-username', title: evt.pubkey}, userName);
-  const timeElem = elem('time', { dateTime: time.toISOString()}, formatTime(time));
-  const headerInfo = isReply ? [
-    name, ' ', timeElem
-  ] : [
-    name,
-    elem('span', {
-      title: `Event ${evt.id}
-      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}`
-    }, ` on ${host} `),
-    timeElem,
-  ];
+  const timeElem = elem('time', { dateTime: time.toISOString()}, formatTime(time)); 
+  const hasLongContent = evt.content.length > 280;
+  const headerInfo = isReply
+    ? [name, ' ', timeElem]
+    : [name, ` on ${host} `, timeElem];
+  const content = hasLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
   const body = elem('div', {className: 'mbox-body'}, [
-    elem('header', {className: 'mbox-header'}, [
+    elem('header', {
+      className: 'mbox-header',
+      title: `Event ${evt.id}\non ${host} ${time}
+      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}`
+    }, [
       elem('small', {}, headerInfo),
     ]),
-    evt.content, // text
-    elem('br'),
+    elem('div', {data: hasLongContent ? {append: evt.content.slice(280)} : null}, content),
     elem('button', {
       className: 'button-inline',
       name: 'reply', type: 'button',
@@ -153,7 +151,7 @@ function handleReply(evt, relay) {
       replyContainer = elem('div', {className: 'mobx-replies'});
       article.querySelector('.mbox-body').append(replyContainer);
     }
-    replyContainer.append(createTextNote(evt, relay))
+    replyContainer.append(createTextNote(evt, relay));
   }
 }
 
@@ -247,13 +245,14 @@ function getMetadata(evt, relay) {
   const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // TODO: enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
-  const isReply = evt.tags.some(hasEventTag);
+  const title = `${userName} on ${host} ${userAbout}`;
   const img = elem('img', {
     className: 'mbox-img',
     src: userImg,
-    alt: `${userName}@${host}`,
-    title: userAbout,
+    alt: title,
+    title,
   }, '');
+  const isReply = evt.tags.some(hasEventTag);
   const replies = replyList.filter((reply) => reply.tags[0][1] === evt.id);
   const time = new Date(evt.created_at * 1000);
   return {host, img, isReply, replies, time, userName};
@@ -289,6 +288,7 @@ feedContainer.addEventListener('click', (e) => {
     writeForm.hidden = false;
     replyTo = ['e', button.dataset.eventId, button.dataset.relay];
     input.focus();
+    return;
   }
 });
 
@@ -399,3 +399,12 @@ privateTgl.addEventListener('click', () => {
 
 privateKeyInput.value = localStorage.getItem('private_key');
 pubKeyInput.value = localStorage.getItem('pub_key');
+
+document.body.addEventListener('click', (e) => {
+  const append = e.target.closest('[data-append]');
+  if (append) {
+    append.textContent += append.dataset.append;
+    delete append.dataset.append;
+    return;
+  }
+});

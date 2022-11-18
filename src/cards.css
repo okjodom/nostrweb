@@ -7,13 +7,19 @@
   margin-bottom: 1rem;
 }
 
-.mbox .mbox-img {
+.mbox-img {
+  --size: 4ch;
   align-self: start;
-  flex-basis: 4ch;
-  height: 4ch;
+  flex-basis: var(--size);
+  height: var(--size);
   margin-right: 1rem;
   margin-top: .5ch;
-  max-width: 4ch;
+  max-width: var(--size);
+}
+.mbox-recommend-server .mbox-img {
+  --size: 2.5ch;
+  margin-left: 1ch;
+  margin-right: 1.5ch;
 }
 
 .mbox-body {
