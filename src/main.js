@@ -75,7 +75,7 @@ function handleTextNote(evt, relay) {
 }
 
 // feed
-const feedContainer = document.querySelector('#feed');
+const feedContainer = document.querySelector('#homefeed');
 const feedDomMap = {};
 const sortByCreatedAt = (evt1, evt2) => {
   if (evt1.created_at ===  evt2.created_at) {
@@ -115,28 +115,31 @@ setInterval(() => {
 
 function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
-  const name = elem('strong', {className: 'mbox-username', title: evt.pubkey}, userName);
-  const timeElem = elem('time', { dateTime: time.toISOString()}, formatTime(time)); 
-  const hasLongContent = evt.content.length > 280;
-  const headerInfo = isReply
-    ? [name, ' ', timeElem]
-    : [name, ` on ${host} `, timeElem];
-  const content = hasLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
+  const isLongContent = evt.content.length > 280;
+  const content = isLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
   const body = elem('div', {className: 'mbox-body'}, [
     elem('header', {
       className: 'mbox-header',
-      title: `Event ${evt.id}\non ${host} ${time}
-      ${isReply ? `\nReply ${evt.tags[0][1]}\n` : ''}`
+      title: `User: ${userName}\n${time}\n\nUser pubkey: ${evt.pubkey}\n\nRelay: ${host}\n\nEvent-id: ${evt.id}
+      ${isReply ? `\nReply to ${evt.tags[0][1]}\n` : ''}`
     }, [
-      elem('small', {}, headerInfo),
+      elem('small', {}, [
+        elem('strong', {className: 'mbox-username'}, userName),
+        ' ',
+        elem('time', {dateTime: time.toISOString()}, formatTime(time))
+      ]),
     ]),
-    elem('div', {data: hasLongContent ? {append: evt.content.slice(280)} : null}, content),
+    elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, content),
     elem('button', {
-      className: 'button-inline',
-      name: 'reply', type: 'button',
-      data: {'eventId': evt.id, relay}
+      className: 'btn-inline', name: 'reply', type: 'button',
+      data: {'eventId': evt.id, relay},
+    }, [elem('img', {height: 24, width: 24, src: 'assets/comment.svg'})]),
+    elem('button', {
+      className: 'btn-inline', name: 'star', type: 'button',
+      data: {'eventId': evt.id, relay},
     }, [
-      elem('small', {}, 'reply')
+      elem('img', {alt: '♥', height: 24, width: 24, src: 'assets/heart-fill.svg'}),
+      elem('small', {}, 2),
     ]),
     replies[0] ? elem('div', {className: 'mobx-replies'}, replies.map(e => createTextNote(e, relay))) : '',
   ]);
@@ -242,15 +245,14 @@ const getHost = (url) => {
 function getMetadata(evt, relay) {
   const host = getHost(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = /*user?.metadata[relay]?.picture || */'bubble.svg'; // TODO: enable pic once we have proxy
+  const userImg = /*user?.metadata[relay]?.picture || */'assets/bubble.svg'; // TODO: enable pic once we have proxy
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
-  const title = `${userName} on ${host} ${userAbout}`;
   const img = elem('img', {
     className: 'mbox-img',
     src: userImg,
-    alt: title,
-    title,
+    alt: `${userName} ${host}`,
+    title: `${userName} on ${host} ${userAbout}`,
   }, '');
   const isReply = evt.tags.some(hasEventTag);
   const replies = replyList.filter((reply) => reply.tags[0][1] === evt.id);
@@ -390,7 +392,7 @@ function validKeys(privatekey, pubkey) {
   }
   statusMessage.hidden = false;
   importBtn.setAttribute('disabled', true);
-  return  false;
+  return false;
 }
 
 privateTgl.addEventListener('click', () => {

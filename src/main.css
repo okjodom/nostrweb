@@ -3,6 +3,13 @@
 @import "form.css";
 
 :root {
+  /* 5px auto Highlight */
+  --focus-border-color: rgb(0, 122, 255);
+  --focus-border-radius: 2px;
+  --focus-outline-color: rgb(127, 189, 247);
+  --focus-outline-style: solid;
+  --focus-outline-width: 2px;
+  --focus-outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
   --font-small: 1.2rem;
 }
 
@@ -53,9 +60,16 @@ html {
 body {
   background-color: var(--bgcolor);
   color: var(--color);
-  font-family: monospace;
   font-size: 1.6rem;
   line-height: 1.5;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: monospace;
 }
 
 small,
@@ -63,10 +77,18 @@ time {
   font-size: var(--font-small);
 }
 
-*, ::after, ::before {
-  box-sizing: border-box;
-}
-
 .danger {
   background-color: var(--bgcolor-danger);
+}
+
+a:focus {
+  border-radius: var(--focus-border-radius);
+  outline: var(--focus-outline);
+  outline-offset: 0;
+}
+
+img[alt] {
+  font-size: .9rem;
+  text-align: center;
+  word-break: break-all;
 }

@@ -1,19 +1,12 @@
-.tabs {
-  position: relative;
-  max-width: 96ch;
-  min-height: 200px;
-}
 
-.tab {
-  float: left;
-}
+.tabs .tab-content { display: none; }
+#feed:checked ~ .tabs .tab-content:nth-child(1),
+#trending:checked ~ .tabs .tab-content:nth-child(2),
+#direct:checked ~ .tabs .tab-content:nth-child(3),
+#chat:checked ~ .tabs .tab-content:nth-child(4),
+#settings:checked ~ .tabs .tab-content:nth-child(5) { display: block; }
 
-.tab > label {
-  cursor: pointer;
-  padding: 1rem 1.5em;
-}
-
-.tab [type=radio] {
+input[type="radio"].tab {
   clip: rect(0, 0, 0, 0);
   height: 0;
   overflow: hidden;
@@ -21,33 +14,45 @@
   width: 0;
 }
 
-.tab [type=radio] + label {
+.tab + label {
+  border: none;
+  color: var(--color);
+  display: inline-block;
   outline: 2px solid var(--bgcolor-accent);
-  outline-offset: -1px;
+  padding: 1rem 1.5em;
+  position: relative;
+  top: 1px;
+}
+input[type="radio"]:checked + label {
+  background: var(--bgcolor-accent);
+}
+
+.tab:focus + label,
+.tab:active + label {
+  border-color: var(--focus-border-color);
+  border-radius: var(--focus-border-radius);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.tab-content {
+  max-width: 96ch;
+  min-height: 200px;
 }
 
 /*
-.tab [type=radio]:focus + label {
-  outline: 2px dotted black;
+
+
+.tabs {
+  position: relative;
 }
+
+.tab {
+  float: left;
+}
+
+.tab > label {
+}
+
+
 */
-
-.tab [type=radio]:checked ~ label {
-  background-color: var(--bgcolor-accent);
-  color: var(--color);
-  z-index: 2;
-}
-
-.tab [type=radio]:checked ~ label ~ .content {
-  opacity: 1;
-  z-index: 1;
-}
-
-.tab .content {
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  top: 10rem;
-}

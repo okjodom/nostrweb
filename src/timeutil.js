@@ -45,7 +45,7 @@ const timeAgo = (time, locale = 'en') => {
   } else if (minutes > 0) {
     return relativeTime.format(0 - minutes, 'minute');
   } else {
-    return relativeTime.format(0 - timeSince, 'second');
+    return relativeTime.format(Math.round(0 - timeSince), 'second');
   }
 };
 

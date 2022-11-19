@@ -13,7 +13,7 @@
 export function elem(name = 'div', {data, ...props} = {}, children = []) {
     const el = document.createElement(name);
     Object.assign(el, props);
-    if (typeof children === 'string') {
+    if (['number', 'string'].includes(typeof children)) {
         el.append(children);
     } else {
         el.append(...children);

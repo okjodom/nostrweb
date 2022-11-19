@@ -6,14 +6,22 @@
     <link rel="stylesheet" href="main.css" type="text/css">
   </head>
   <body>
-    <div class="tabs">
-
-      <div class="tab">
-        <input type="radio" name="maintabs" id="homefeed" checked>
-        <label for="homefeed">feed</label>
-        <div class="content">
+    <main class="tabbed">
+      <input type="radio" name="maintabs" id="feed" class="tab" checked>
+      <label for="feed">feed</label>
+      <input type="radio" name="maintabs" id="trending" class="tab">
+      <label for="trending">trending</label>
+      <input type="radio" name="maintabs" id="direct" class="tab">
+      <label for="direct">direct</label>
+      <input type="radio" name="maintabs" id="chat" class="tab">
+      <label for="chat">chat</label>
+      <input type="radio" name="maintabs" id="settings" class="tab">
+      <label for="settings">settings</label>
+      
+      <div class="tabs">
+        <div class="tab-content">
           <article class="mbox">
-            <img class="mbox-img" src="bubble.svg">
+            <img class="mbox-img" src="assets/comment.svg" alt="">
             <div class="mbox-body" id="newMessage">
               <form class="form-inline" id="writeForm">
                 <input type="text" name="message">
@@ -22,57 +30,43 @@
               <small id="sendstatus" class="form-status"></small>
             </div>
           </article>
-          <div class="cards" id="feed"></div>
+          <div class="cards" id="homefeed"></div>
         </div>
-      </div>
-
-      <div class="tab">
-        <input type="radio" name="maintabs" id="trending">
-        <label for="trending">trending</label>
-        <div class="content">
+    
+        <div class="tab-content">
           <p><a href="https://github.com/nostr-protocol/nips/blob/master/12.md">NIP-12 (generic queries)</a></p>
         </div>
-      </div>
-
-      <div class="tab">
-        <input type="radio" name="maintabs" id="direct">
-        <label for="direct">direct</label>
-        <div class="content">
+    
+        <div class="tab-content">
           <p><a href="https://github.com/nostr-protocol/nips/blob/master/04.md">NIP-04 (direct msg)</a></p>
         </div>
-      </div>
-
-      <div class="tab">
-        <input type="radio" name="maintabs" id="chat">
-        <label for="chat">chat</label>
-        <div class="content">
+    
+        <div class="tab-content">
           <p><a href="https://github.com/nostr-protocol/nips/blob/master/28.md">NIP-28 (public chat)</a></p>
         </div>
+    
+        <div class="tab-content">
+          <form action="#" name="settings">
+            <label for="pubkey">public-key</label>
+            <input type="text" id="pubkey">
+            <label for="privatekey">
+              private-key
+              <button type="button" name="privatekey-toggle" class="btn-inline" >
+                <small>show</small>
+              </button>
+            </label>
+            <input type="password" id="privatekey">
+            <div class="buttons">
+              <small id="keystatus" class="form-status" hidden></small>
+              <button type="button" name="generate" tabindex="0">new</button>
+              <span class="inline-text"></span>
+              <button type="button" name="import" tabindex="0" disabled>save</button>
+            </div>
+          </form>
+        </div>
       </div>
+    </main>
 
-      <div class="tab">
-        <input type="radio" name="maintabs" id="settings">
-        <label for="settings">settings</label>
-        <form action="#" name="settings" class="content">
-          <label for="pubkey">public-key</label>
-          <input type="text" id="pubkey">
-          <label for="privatekey">
-            private-key
-            <button type="button" name="privatekey-toggle" class="button-inline" >
-              <small>show</small>
-            </button>
-          </label>
-          <input type="password" id="privatekey">
-          <div class="buttons">
-            <small id="keystatus" class="form-status" hidden></small>
-            <button type="button" name="generate" tabindex="0">new</button>
-            <span class="inline-text"></span>
-            <button type="button" name="import" tabindex="0" disabled>save</button>
-          </div>
-        </form>
-      </div>
-
-    </div>
   </body>
   <script src="main.js"></script>
 </html>

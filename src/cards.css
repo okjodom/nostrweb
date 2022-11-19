@@ -8,12 +8,13 @@
 }
 
 .mbox-img {
-  --size: 4ch;
+  --size: 5rem;
   align-self: start;
   flex-basis: var(--size);
   height: var(--size);
   margin-right: 1rem;
   margin-top: .5ch;
+  max-width: var(--size);
   max-width: var(--size);
 }
 .mbox-recommend-server .mbox-img {
@@ -38,7 +39,6 @@
 }
 .mbox-header time,
 .mbox-username {
-  color: var(--color-accent);
 }
 
 .mbox-recommend-server .mbox-body {
