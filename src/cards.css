@@ -18,9 +18,9 @@
   max-width: var(--size);
 }
 .mbox-recommend-server .mbox-img {
-  --size: 2.5ch;
-  margin-left: 1ch;
-  margin-right: 1.5ch;
+  --size: 4.5ch;
+  margin-left: 3ch;
+  margin-right: 3.5ch;
 }
 
 .mbox-body {

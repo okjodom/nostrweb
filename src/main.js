@@ -15,6 +15,9 @@ pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 let max = 0;
 
 function onEvent(evt, relay) {
+  if (evt.id === '209eefe6c940377fa8730853a75d1b4bb31bd929d79') {
+    console.log(evt)
+  }
   // if (max++ >= 223) {
   //   return subscription.unsub();
   // }
@@ -31,12 +34,14 @@ function onEvent(evt, relay) {
     case 3:
       updateContactList(evt, relay);
       break;
+    case 7:
+      handleReaction(evt, relay);
     default:
       // console.log(`TODO: add support for event kind ${evt.kind}`/*, evt*/)
   }
 }
 
-// const pubkey = localStorage.getItem('pub_key')
+let pubkey = localStorage.getItem('pub_key')
 
 const subscription = pool.sub({
   cb: onEvent,
@@ -50,12 +55,11 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 100,
+    limit: 400,
   }
 });
 
 const textNoteList = [];
-const replyList = [];
 const eventRelayMap = {};
 const hasEventTag = tag => tag[0] === 'e';
 
@@ -65,7 +69,6 @@ function handleTextNote(evt, relay) {
   } else {
     eventRelayMap[evt.id] = [relay];
     if (evt.tags.some(hasEventTag)) {
-      replyList.push(evt);
       handleReply(evt, relay);
     } else {
       textNoteList.push(evt);
@@ -74,9 +77,53 @@ function handleTextNote(evt, relay) {
   }
 }
 
+const replyList = [];
+const reactionMap = {};
+
+function handleReaction(evt, relay) {
+  if (!evt.content.length) {
+    // console.log('reaction with no content', evt)
+    return;
+  }
+  const eventTags = evt.tags.filter(hasEventTag);
+  let replies = eventTags.filter(([tag, eventId, relayUrl, marker]) => marker === 'reply');
+  if (replies.length === 0) {
+    // deprecated https://github.com/nostr-protocol/nips/blob/master/10.md#positional-e-tags-deprecated
+    replies = eventTags.filter((tags) => tags[3] === undefined);
+  }
+  if (replies.length !== 1) {
+    console.log('call me', evt);
+    return;
+  }
+
+  const [tag, eventId/*, relayUrl, marker*/] = replies[0];
+
+  if (reactionMap[eventId]) {
+    if (reactionMap[eventId].find(reaction => reaction.id === evt.id)) {
+      // already received this reaction from a different relay
+      return;
+    }
+    reactionMap[eventId] = [evt, ...(reactionMap[eventId])];
+  } else {
+    reactionMap[eventId] = [evt];
+  }
+  const article = feedDomMap[eventId] || replyDomMap[eventId];
+  if (article) {
+    const button = article.querySelector('button[name="star"]');
+    const reactions = button.querySelector('[data-reactions]');
+    reactions.textContent = reactionMap[eventId].length;
+    console.log(evt.pubkey, pubkey)
+    if (evt.pubkey === pubkey) {
+      button.querySelector('img[src$="star.svg"]').setAttribute('src', 'assets/star-fill.svg');
+    }
+  }
+}
+
 // feed
 const feedContainer = document.querySelector('#homefeed');
 const feedDomMap = {};
+const replyDomMap = window.replyDomMap = {};
+
 const sortByCreatedAt = (evt1, evt2) => {
   if (evt1.created_at ===  evt2.created_at) {
     // console.log('TODO: OMG exactly at the same time, figure out how to sort then', evt1, evt2);
@@ -117,16 +164,21 @@ function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
   const isLongContent = evt.content.length > 280;
   const content = isLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
+  const hasReactions = reactionMap[evt.id]?.length > 0;
+  const didReact = hasReactions && !!reactionMap[evt.id].find(reaction => reaction.pubkey === pubkey);
+  const replyFeed = replies[0] ? replies.map(e => replyDomMap[e.id] = createTextNote(e, relay)) : [];
   const body = elem('div', {className: 'mbox-body'}, [
     elem('header', {
       className: 'mbox-header',
       title: `User: ${userName}\n${time}\n\nUser pubkey: ${evt.pubkey}\n\nRelay: ${host}\n\nEvent-id: ${evt.id}
+      ${evt.tags.length ? `\nTags ${JSON.stringify(evt.tags)}\n` : ''}
       ${isReply ? `\nReply to ${evt.tags[0][1]}\n` : ''}`
     }, [
       elem('small', {}, [
         elem('strong', {className: 'mbox-username'}, userName),
         ' ',
-        elem('time', {dateTime: time.toISOString()}, formatTime(time))
+        elem('time', {dateTime: time.toISOString()}, formatTime(time)),
+        ` kind:${evt.kind} ${evt.id}`,
       ]),
     ]),
     elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, content),
@@ -138,24 +190,38 @@ function createTextNote(evt, relay) {
       className: 'btn-inline', name: 'star', type: 'button',
       data: {'eventId': evt.id, relay},
     }, [
-      elem('img', {alt: '♥', height: 24, width: 24, src: 'assets/heart-fill.svg'}),
-      elem('small', {}, 2),
+      elem('img', {alt: didReact ? '✭' : '✩', height: 24, width: 24, src: `assets/${didReact ? 'star-fill' : 'star'}.svg`}), // ♥
+      elem('small', {data: {reactions: evt.id}}, hasReactions ? reactionMap[evt.id].length : ''),
     ]),
-    replies[0] ? elem('div', {className: 'mobx-replies'}, replies.map(e => createTextNote(e, relay))) : '',
+    replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed) : '',
   ]);
   return rendernArticle([img, body]);
 }
 
 function handleReply(evt, relay) {
-  const article = feedDomMap[evt.tags[0][1]];
-  if (article) {
-    let replyContainer = article.querySelector('.mobx-replies');
-    if (!replyContainer) {
-      replyContainer = elem('div', {className: 'mobx-replies'});
-      article.querySelector('.mbox-body').append(replyContainer);
-    }
-    replyContainer.append(createTextNote(evt, relay));
+  if (replyDomMap[evt.id]) {
+    console.log('CALL ME already have reply in replyDomMap', evt, relay);
+    return;
   }
+  replyList.push(evt);
+  renderReply(evt, relay);
+}
+
+function renderReply(evt, relay) {
+  const eventId = evt.tags[0][1]; // TODO: double check
+  const article = feedDomMap[eventId] || replyDomMap[eventId];
+  if (!article) {
+    // root article has not been rendered
+    return;
+  }
+  let replyContainer = article.querySelector('.mobx-replies');
+  if (!replyContainer) {
+    replyContainer = elem('div', {className: 'mobx-replies'});
+    article.querySelector('.mbox-body').append(replyContainer);
+  }
+  const reply = createTextNote(evt, relay);
+  replyContainer.append(reply);
+  replyDomMap[evt.id] = reply;
 }
 
 const sortEventCreatedAt = (created_at) => (
@@ -189,11 +255,11 @@ function renderRecommendServer(evt, relay) {
     ]),
     ` recommends server: ${evt.content}`,
   ]);
-  return rendernArticle([img, body], {className: 'mbox-recommend-server'});
+  return rendernArticle([img, body], {className: 'mbox-recommend-server', data: {relay: evt.content}});
 }
 
-function rendernArticle(content, props) {
-  const className = ['mbox', props?.className].join(' ');
+function rendernArticle(content, props = {}) {
+  const className = props.className ? ['mbox', props?.className].join(' ') : 'mbox';
   return elem('article', {...props, className}, content);
 }
 
@@ -292,7 +358,33 @@ feedContainer.addEventListener('click', (e) => {
     input.focus();
     return;
   }
+  if (button && button.name === 'star') {
+    upvote(button.dataset.eventId, button.dataset.relay)
+    return;
+  }
 });
+
+async function upvote(eventId, relay) {
+  const privatekey = localStorage.getItem('private_key');
+  const newReaction = {
+    kind: 7,
+    pubkey, // TODO: lib could check that this is the pubkey of the key to sign with
+    content: '+',
+    tags: [['e', eventId, relay, 'reply']],
+    created_at: Math.floor(Date.now() * 0.001),
+  };
+  const sig = await signEvent(newReaction, privatekey).catch(console.error);
+  if (sig) {
+    const ev = await pool.publish({...newReaction, sig}, (status, url) => {
+      if (status === 0) {
+        console.info(`publish request sent to ${url}`);
+      }
+      if (status === 1) {
+        console.info(`event published by ${url}`);
+      }
+    }).catch(console.error);
+  }
+}
 
 // send
 const sendStatus = document.querySelector('#sendstatus');
@@ -302,7 +394,7 @@ const onSendError = err => {
 };
 const publish = document.querySelector('#publish');
 publish.addEventListener('click', async () => {
-  const pubkey = localStorage.getItem('pub_key');
+  // const pubkey = localStorage.getItem('pub_key');
   const privatekey = localStorage.getItem('private_key');
   if (!pubkey || !privatekey) {
     return onSendError(new Error('no pubkey/privatekey'));
@@ -364,12 +456,13 @@ generateBtn.addEventListener('click', () => {
 
 importBtn.addEventListener('click', () => {
   const privatekey = privateKeyInput.value;
-  const pubkey = pubKeyInput.value;
-  if (validKeys(privatekey, pubkey)) {
+  const pubkeyInput = pubKeyInput.value;
+  if (validKeys(privatekey, pubkeyInput)) {
     localStorage.setItem('private_key', privatekey);
-    localStorage.setItem('pub_key', pubkey);
+    localStorage.setItem('pub_key', pubkeyInput);
     statusMessage.textContent = 'stored private and public key locally!';
     statusMessage.hidden = false;
+    pubkey = pubkeyInput;
   }
 });
 

@@ -12,6 +12,8 @@ export const options = {
     'src/assets/bubble.svg',
     'src/assets/comment.svg',
     'src/assets/heart-fill.svg',
+    'src/assets/star.svg',
+    'src/assets/star-fill.svg',
   ],
   outdir: 'dist',
   //entryNames: '[name]-[hash]', TODO: replace urls in index.html with hashed paths

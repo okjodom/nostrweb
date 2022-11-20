@@ -70,6 +70,13 @@ button:focus {
   max-height: 18px;
   max-width: 18px;
 }
+.btn-inline img[alt] {
+  color: #7f7f7f;
+  line-height: 1px;
+}
+.btn-inline img[alt]::before {
+  font-size: 3.4rem;
+}
 
 button:disabled {
   background-color: var(--bgcolor-inactive);
@@ -91,8 +98,13 @@ button:disabled {
   flex-grow: 1;
   gap: 1rem;
 }
+.cards .form-inline button,
+.cards .form-inline input[type="text"] {
+  margin: .4rem 0;
+  padding: .6rem 1rem;
+}
 
-.form-inline input[type=text] {
+.form-inline input[type="text"] {
   flex-grow: 1;
 }
 
