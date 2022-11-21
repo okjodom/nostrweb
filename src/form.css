@@ -1,4 +1,7 @@
-form {
+form,
+.form {
+  display: flex;
+  flex-direction: column;
 }
 
 input,
@@ -17,6 +20,7 @@ label {
   margin-bottom: 0;
   padding: 1.3rem 1.8rem;
   text-indent: 0;
+  transition: background-color .25s;
 }
 
 label {
@@ -25,11 +29,11 @@ label {
 
 input[type="password"],
 input[type="text"] {
+  background: var(--bgcolor-textinput);
   border: .2rem solid #b7b7b7;
   border-radius: .2rem;
   display: block;
   margin: 0;
-  width: 100%;
 }
 input[type="password"]:focus,
 input[type="text"]:focus {
@@ -78,6 +82,10 @@ button:focus {
   font-size: 3.4rem;
 }
 
+.btn-danger {
+  background: var(--bgcolor-danger);
+}
+
 button:disabled {
   background-color: var(--bgcolor-inactive);
   cursor: default;
@@ -95,6 +103,7 @@ button:disabled {
 
 .form-inline {
   display: flex;
+  flex-direction: row;
   flex-grow: 1;
   gap: 1rem;
 }

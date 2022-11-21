@@ -2,30 +2,30 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>nostr sandbox</title>
+    <title>nostr</title>
     <link rel="stylesheet" href="main.css" type="text/css">
   </head>
   <body>
     <main class="tabbed">
       <input type="radio" name="maintabs" id="feed" class="tab" checked>
       <label for="feed">feed</label>
-      <input type="radio" name="maintabs" id="trending" class="tab">
+      <!-- <input type="radio" name="maintabs" id="trending" class="tab">
       <label for="trending">trending</label>
       <input type="radio" name="maintabs" id="direct" class="tab">
       <label for="direct">direct</label>
       <input type="radio" name="maintabs" id="chat" class="tab">
-      <label for="chat">chat</label>
+      <label for="chat">chat</label> -->
       <input type="radio" name="maintabs" id="settings" class="tab">
-      <label for="settings">settings</label>
+      <label for="settings">profile</label>
       
       <div class="tabs">
         <div class="tab-content">
           <article class="mbox">
-            <img class="mbox-img" src="assets/comment.svg" alt="">
+            <img class="mbox-img" id="bubble" src="assets/comment.svg" alt="">
             <div class="mbox-body" id="newMessage">
-              <form class="form-inline" id="writeForm">
+              <form action="#" class="form-inline" id="writeForm">
                 <input type="text" name="message">
-                <button type="button" id="publish" disabled>send</button>
+                <button type="submit" id="publish" disabled>send</button>
               </form>
               <small id="sendstatus" class="form-status"></small>
             </div>
@@ -46,6 +46,10 @@
         </div>
     
         <div class="tab-content">
+          <!-- <div class="form form-inline">
+            <input type="text" name="username" id="username" placeholder="username">
+            <button type="button" name="publish-username" tabindex="0">publish</button>
+          </div> -->
           <form action="#" name="settings">
             <label for="pubkey">public-key</label>
             <input type="text" id="pubkey">

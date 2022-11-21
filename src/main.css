@@ -24,23 +24,25 @@
 
 @media (prefers-color-scheme: light) {
   html {
-    --bgcolor: #fff;
-    --bgcolor-accent: #ff731d;
+    --bgcolor: #fdfefa;
+    --bgcolor-accent: #37ff1d;
     --bgcolor-inactive: #bababa;
+    --bgcolor-textinput: #fff;
     --color: rgb(68 68 68);
     --color-accent: #ff731d;
-    --bgcolor-danger: rgb(255 0 0);
+    --bgcolor-danger: rgb(255, 80, 80);
   }
 }
 
 @media (prefers-color-scheme: dark) {
   html {
     --bgcolor: #191919;
-    --bgcolor-accent: #2d4263;
-    --bgcolor-inactive: #535353;
-    --color: #c84b31;
-    --color-accent: #ecdbba;
-    --bgcolor-danger: rgb(255 0 0);
+    --bgcolor-accent: #1e437d;
+    --bgcolor-inactive: #333333;
+    --bgcolor-textinput: #0e0e0e;
+    --color: #fff;
+    --color-accent: #bbb;;
+    --bgcolor-danger: rgb(169, 0, 0);
   }
 
   img {
@@ -81,14 +83,27 @@ time {
   background-color: var(--bgcolor-danger);
 }
 
+a {
+  color: var(--color-accent);
+}
+
 a:focus {
   border-radius: var(--focus-border-radius);
   outline: var(--focus-outline);
   outline-offset: 0;
 }
 
+a:visited {
+  color: darkmagenta;
+}
+
 img[alt] {
   font-size: .9rem;
   text-align: center;
   word-break: break-all;
+}
+
+pre {
+  margin: 0;
+  padding: .5rem 0;
 }

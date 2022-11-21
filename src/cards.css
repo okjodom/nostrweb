@@ -17,6 +17,8 @@
   max-width: var(--size);
   max-width: var(--size);
 }
+
+.mbox-updated-contact .mbox-img,
 .mbox-recommend-server .mbox-img {
   --size: 4.5ch;
   margin-left: 3ch;
@@ -27,7 +29,6 @@
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
-  max-width: 96ch;
   word-break: break-word;
 }
 
@@ -38,15 +39,26 @@
   margin-top: 0;
 }
 .mbox-header time,
-.mbox-username {
+.mbox-username,
+.mbox-updated-contact,
+.mbox mbox-recommend-server {
+  color: var(--color-accent);
 }
 
+.mbox-updated-contact .mbox-body,
 .mbox-recommend-server .mbox-body {
   display: block;
   flex-basis: 100%;
   font-size: var(--font-small);
+  overflow: scroll;
 }
 
+.mbox-updated-contact .mbox-header,
 .mbox-recommend-server .mbox-header {
   display: inline;
+}
+
+.mbox-updated-contact {
+  padding: 0 0 1rem 0;
+  margin: 0;
 }

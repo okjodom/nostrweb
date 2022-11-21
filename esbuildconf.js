@@ -14,10 +14,11 @@ export const options = {
     'src/assets/heart-fill.svg',
     'src/assets/star.svg',
     'src/assets/star-fill.svg',
+    'src/favicon.ico',
   ],
   outdir: 'dist',
   //entryNames: '[name]-[hash]', TODO: replace urls in index.html with hashed paths
-  loader: {'.html': 'copy', '.svg': 'copy'},
+  loader: {'.html': 'copy', '.svg': 'copy', '.ico': 'copy'},
   bundle: true,
   platform: 'browser',
   minify: false, // TODO: true for release and enable sourcemap

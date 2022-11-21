@@ -4,23 +4,14 @@ import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
 pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
-// pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
 // read only
 // pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 
-
-let max = 0;
-
 function onEvent(evt, relay) {
-  if (evt.id === '209eefe6c940377fa8730853a75d1b4bb31bd929d79') {
-    console.log(evt)
-  }
-  // if (max++ >= 223) {
-  //   return subscription.unsub();
-  // }
   switch (evt.kind) {
     case 0:
       handleMetadata(evt, relay);
@@ -32,7 +23,7 @@ function onEvent(evt, relay) {
       handleRecommendServer(evt, relay);
       break;
     case 3:
-      updateContactList(evt, relay);
+      // handleContactList(evt, relay);
       break;
     case 7:
       handleReaction(evt, relay);
@@ -41,7 +32,13 @@ function onEvent(evt, relay) {
   }
 }
 
-let pubkey = localStorage.getItem('pub_key')
+let pubkey = localStorage.getItem('pub_key') || (() => {
+  const privatekey = generatePrivateKey();
+  const pubkey = getPublicKey(privatekey);
+  localStorage.setItem('private_key', privatekey);
+  localStorage.setItem('pub_key', pubkey);
+  return pubkey;
+})();
 
 const subscription = pool.sub({
   cb: onEvent,
@@ -55,7 +52,7 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 400,
+    limit: 500,
   }
 });
 
@@ -112,9 +109,10 @@ function handleReaction(evt, relay) {
     const button = article.querySelector('button[name="star"]');
     const reactions = button.querySelector('[data-reactions]');
     reactions.textContent = reactionMap[eventId].length;
-    console.log(evt.pubkey, pubkey)
     if (evt.pubkey === pubkey) {
-      button.querySelector('img[src$="star.svg"]').setAttribute('src', 'assets/star-fill.svg');
+      const star = button.querySelector('img[src$="star.svg"]');
+      star.setAttribute('src', 'assets/star-fill.svg');
+      star.setAttribute('title', reactionMap[eventId])
     }
   }
 }
@@ -131,14 +129,8 @@ const sortByCreatedAt = (evt1, evt2) => {
   return evt1.created_at > evt2.created_at ? -1 : 1;
 };
 
-// let debounceDebugMessageTimer;
 function renderFeed() {
   const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
-  // debug
-  // clearTimeout(debounceDebugMessageTimer);
-  // debounceDebugMessageTimer = setTimeout(() => {
-  //   console.log(`${sortedFeeds.reverse().map(e => dateTime.format(e.created_at * 1000)).join('\n')}`)
-  // }, 2000);
   sortedFeeds.forEach((textNoteEvent, i) => {
     if (feedDomMap[textNoteEvent.id]) {
       // TODO check eventRelayMap if event was published to different relays
@@ -178,22 +170,26 @@ function createTextNote(evt, relay) {
         elem('strong', {className: 'mbox-username'}, userName),
         ' ',
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
-        ` kind:${evt.kind} ${evt.id}`,
       ]),
     ]),
     elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, content),
     elem('button', {
-      className: 'btn-inline', name: 'reply', type: 'button',
-      data: {'eventId': evt.id, relay},
-    }, [elem('img', {height: 24, width: 24, src: 'assets/comment.svg'})]),
-    elem('button', {
       className: 'btn-inline', name: 'star', type: 'button',
       data: {'eventId': evt.id, relay},
     }, [
-      elem('img', {alt: didReact ? '✭' : '✩', height: 24, width: 24, src: `assets/${didReact ? 'star-fill' : 'star'}.svg`}), // ♥
+      elem('img', {
+        alt: didReact ? '✭' : '✩', // ♥
+        height: 24, width: 24,
+        src: `assets/${didReact ? 'star-fill' : 'star'}.svg`,
+        title: reactionMap[evt.id]?.map(({content}) => content).join(' '),
+      }),
       elem('small', {data: {reactions: evt.id}}, hasReactions ? reactionMap[evt.id].length : ''),
     ]),
-    replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed) : '',
+    elem('button', {
+      className: 'btn-inline', name: 'reply', type: 'button',
+      data: {'eventId': evt.id, relay},
+    }, [elem('img', {height: 24, width: 24, src: 'assets/comment.svg'})]),
+    replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
   ]);
   return rendernArticle([img, body]);
 }
@@ -210,8 +206,7 @@ function handleReply(evt, relay) {
 function renderReply(evt, relay) {
   const eventId = evt.tags[0][1]; // TODO: double check
   const article = feedDomMap[eventId] || replyDomMap[eventId];
-  if (!article) {
-    // root article has not been rendered
+  if (!article) { // root article has not been rendered
     return;
   }
   let replyContainer = article.querySelector('.mobx-replies');
@@ -245,6 +240,45 @@ function handleRecommendServer(evt, relay) {
   feedDomMap[evt.id] = art;
 }
 
+function handleContactList(evt, relay) {
+  if (feedDomMap[evt.id]) {
+    return;
+  }
+  const art = renderUpdateContact(evt, relay);
+  if (textNoteList.length < 2) {
+    feedContainer.append(art);
+    return;
+  }
+  const closestTextNotes = textNoteList.sort(sortEventCreatedAt(evt.created_at));
+  feedDomMap[closestTextNotes[0].id].after(art);
+  feedDomMap[evt.id] = art;
+  // const user = userList.find(u => u.pupkey === evt.pubkey);
+  // if (user) {
+  //   console.log(`TODO: add contact list for ${evt.pubkey.slice(0, 8)} on ${relay}`, evt.tags);
+  // } else {
+  //   tempContactList[relay] = tempContactList[relay]
+  //     ? [...tempContactList[relay], evt]
+  //     : [evt];
+  // }
+}
+
+function renderUpdateContact(evt, relay) {
+  const {img, time, userName} = getMetadata(evt, relay);
+  const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
+    elem('header', {className: 'mbox-header'}, [
+      elem('small', {}, [
+        
+      ]),
+    ]),
+    elem('pre', {title: JSON.stringify(evt.content)}, [
+      elem('strong', {}, userName),
+      ' updated contacts: ',
+      JSON.stringify(evt.tags),
+    ]),
+  ]);
+  return rendernArticle([img, body], {className: 'mbox-updated-contact'});
+}
+
 function renderRecommendServer(evt, relay) {
   const {img, time, userName} = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
@@ -264,7 +298,7 @@ function rendernArticle(content, props = {}) {
 }
 
 const userList = [];
-const tempContactList = {};
+// const tempContactList = {};
 
 function handleMetadata(evt, relay) {
   try {
@@ -280,9 +314,7 @@ function setMetadata(evt, relay, content) {
   const user = userList.find(u => u.pubkey === evt.pubkey);
   if (!user) {
     userList.push({
-      metadata: {
-        [relay]: content
-      },
+      metadata: {[relay]: content},
       pubkey: evt.pubkey,
     });
   } else {
@@ -292,12 +324,12 @@ function setMetadata(evt, relay, content) {
       ...content,
     };
   }
-  if (tempContactList[relay]) {
-    const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
-    if (updates) {
-      // console.log('TODO: add contact list (kind 3)', updates);
-    }
-  }
+  // if (tempContactList[relay]) {
+  //   const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
+  //   if (updates) {
+  //     console.log('TODO: add contact list (kind 3)', updates);
+  //   }
+  // }
 }
 
 const getHost = (url) => {
@@ -326,19 +358,6 @@ function getMetadata(evt, relay) {
   return {host, img, isReply, replies, time, userName};
 }
 
-function updateContactList(evt, relay) {
-  const user = userList.find(u => u.pupkey === evt.pubkey);
-  if (user) {
-    console.log(`TODO: add contact list for ${evt.pubkey.slice(0, 8)} on ${relay}`, evt.tags);
-  } else {
-    tempContactList[relay] = tempContactList[relay]
-      ? [...tempContactList[relay], evt]
-      : [evt];
-  }
-}
-
-// check pool.status
-
 // reply
 const writeForm = document.querySelector('#writeForm');
 const input = document.querySelector('input[name="message"]');
@@ -351,8 +370,9 @@ feedContainer.addEventListener('click', (e) => {
       lastReplyBtn.hidden = false;
     }
     lastReplyBtn = button;
-    button.hidden = true;
+    // button.hidden = true;
     button.after(writeForm);
+    button.after(sendStatus);
     writeForm.hidden = false;
     replyTo = ['e', button.dataset.eventId, button.dataset.relay];
     input.focus();
@@ -362,6 +382,14 @@ feedContainer.addEventListener('click', (e) => {
     upvote(button.dataset.eventId, button.dataset.relay)
     return;
   }
+});
+
+const newMessageDiv = document.querySelector('#newMessage');
+document.querySelector('#bubble').addEventListener('click', (e) => {
+  replyTo = null;
+  newMessageDiv.prepend(writeForm);
+  newMessageDiv.append(sendStatus);
+  input.focus();
 });
 
 async function upvote(eventId, relay) {
@@ -393,7 +421,8 @@ const onSendError = err => {
   sendStatus.hidden = false;
 };
 const publish = document.querySelector('#publish');
-publish.addEventListener('click', async () => {
+writeForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
   // const pubkey = localStorage.getItem('pub_key');
   const privatekey = localStorage.getItem('private_key');
   if (!pubkey || !privatekey) {
@@ -424,7 +453,8 @@ publish.addEventListener('click', async () => {
           lastReplyBtn.hidden = false;
           lastReplyBtn = null;
           replyTo = null;
-          document.querySelector('#newMessage').append(writeForm);
+          newMessageDiv.append(writeForm);
+          newMessageDiv.append(sendStatus);
         }
         // console.info(`event published by ${url}`, ev);
       }
@@ -433,6 +463,7 @@ publish.addEventListener('click', async () => {
 });
 
 input.addEventListener('input', () => publish.disabled = !input.value);
+input.addEventListener('blur', () => sendStatus.textContent = '');
 
 // settings
 const form = document.querySelector('form[name="settings"]');

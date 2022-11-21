@@ -1,4 +1,4 @@
-
+.tabs { margin-top: 4rem; }
 .tabs .tab-content { display: none; }
 #feed:checked ~ .tabs .tab-content:nth-child(1),
 #trending:checked ~ .tabs .tab-content:nth-child(2),
@@ -43,9 +43,6 @@ input[type="radio"]:checked + label {
 /*
 
 
-.tabs {
-  position: relative;
-}
 
 .tab {
   float: left;
