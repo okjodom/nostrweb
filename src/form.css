@@ -1,11 +1,12 @@
-form {
-  max-width: 72ch;
+form,
+.form {
+  display: flex;
+  flex-direction: column;
 }
 
 input,
 textarea {
-  color: var(--bgcolor-accent);
-  font-family: monospace;
+  color: var(--color);
   font-size: 1.6rem;
   margin-bottom: 1.2rem;
   padding: 1.3rem 1.8rem;
@@ -13,47 +14,76 @@ textarea {
 
 button,
 label {
-  color: var(--bgcolor-accent);
+  cursor: pointer;
   display: block;
   font-size: 1.6rem;
   margin-bottom: 0;
   padding: 1.3rem 1.8rem;
   text-indent: 0;
+  transition: background-color .25s;
+}
+
+label {
+  color: var(--color-accent);
 }
 
 input[type="password"],
 input[type="text"] {
+  background: var(--bgcolor-textinput);
   border: .2rem solid #b7b7b7;
   border-radius: .2rem;
   display: block;
-  outline-color: rgb(102, 102, 102);
-  width: 100%;
+  margin: 0;
 }
 input[type="password"]:focus,
 input[type="text"]:focus {
-  border-color: #d4d4d4;
-  outline-offset: 1px;
+  border-color: var(--focus-border-color);
+  outline-offset: 2px;
 }
 
 .buttons {
   align-items: center;
   display: flex;
   justify-content: flex-end;
+  margin-top: 2rem;
   min-height: 3.2rem;
-}
-
-.button-inline {
-  background: transparent;
-  color: var(--color);
-  display: inline;
-  padding: .3rem;
 }
 
 button {
   background-color: var(--bgcolor-accent);
   border: none;
-  color: white;
+  border-radius: .2rem;
   cursor: pointer;
+  outline-offset: 1px;
+  word-break: normal;
+}
+
+button:focus {
+}
+
+.btn-inline {
+  align-items: center;
+  background: transparent;
+  color: var(--color);
+  display: inline-flex;
+  gap: .5ch;
+  line-height: 1;
+  padding: .6rem;
+}
+.btn-inline img {
+  max-height: 18px;
+  max-width: 18px;
+}
+.btn-inline img[alt] {
+  color: #7f7f7f;
+  line-height: 1px;
+}
+.btn-inline img[alt]::before {
+  font-size: 3.4rem;
+}
+
+.btn-danger {
+  background: var(--bgcolor-danger);
 }
 
 button:disabled {
@@ -69,4 +99,28 @@ button:disabled {
 .form-status {
   flex-grow: 1;
   padding: 1rem 1.8rem;
+}
+
+.form-inline {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  gap: 1rem;
+}
+.cards .form-inline button,
+.cards .form-inline input[type="text"] {
+  margin: .4rem 0;
+  padding: .6rem 1rem;
+}
+
+.form-inline input[type="text"] {
+  flex-grow: 1;
+}
+
+.form-inline button {
+  flex-grow: 0;
+}
+
+.focus-active {
+
 }

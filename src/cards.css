@@ -3,29 +3,62 @@
   align-items: center;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 1rem;
 }
 
-.mbox .mbox-img {
-  align-self: flex-start;
-  flex-basis: 64px;
-  height: 64px;
+.mbox-img {
+  --size: 5rem;
+  align-self: start;
+  flex-basis: var(--size);
+  height: var(--size);
   margin-right: 1rem;
-  width: 64px;
+  margin-top: .5ch;
+  max-width: var(--size);
+  max-width: var(--size);
 }
 
-.mbox .mbox-header {
+.mbox-updated-contact .mbox-img,
+.mbox-recommend-server .mbox-img {
+  --size: 4.5ch;
+  margin-left: 3ch;
+  margin-right: 3.5ch;
+}
+
+.mbox-body {
+  flex-basis: calc(100% - 64px - 1rem);
+  flex-grow: 0;
+  flex-shrink: 1;
+  word-break: break-word;
+}
+
+.mbox-header {
   flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
   margin-top: 0;
 }
-
-.mbox .mbox-body {
+.mbox-header time,
+.mbox-username,
+.mbox-updated-contact,
+.mbox mbox-recommend-server {
   color: var(--color-accent);
-  flex-basis: calc(100% - 64px - 1rem);
-  flex-grow: 0;
-  flex-shrink: 1;
-  max-width: 84ch;
+}
+
+.mbox-updated-contact .mbox-body,
+.mbox-recommend-server .mbox-body {
+  display: block;
+  flex-basis: 100%;
+  font-size: var(--font-small);
+  overflow: scroll;
+}
+
+.mbox-updated-contact .mbox-header,
+.mbox-recommend-server .mbox-header {
+  display: inline;
+}
+
+.mbox-updated-contact {
+  padding: 0 0 1rem 0;
+  margin: 0;
 }

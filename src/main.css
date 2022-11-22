@@ -2,6 +2,16 @@
 @import "cards.css";
 @import "form.css";
 
+:root {
+  /* 5px auto Highlight */
+  --focus-border-color: rgb(0, 122, 255);
+  --focus-border-radius: 2px;
+  --focus-outline-color: rgb(127, 189, 247);
+  --focus-outline-style: solid;
+  --focus-outline-width: 2px;
+  --focus-outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+  --font-small: 1.2rem;
+}
 
 ::selection {
   background: #ff79f9;
@@ -14,23 +24,25 @@
 
 @media (prefers-color-scheme: light) {
   html {
-    --bgcolor: #fff;
-    --bgcolor-accent: #ff731d;
+    --bgcolor: #fdfefa;
+    --bgcolor-accent: #37ff1d;
     --bgcolor-inactive: #bababa;
+    --bgcolor-textinput: #fff;
     --color: rgb(68 68 68);
-    --color-accent: rgb(0 0 0);
-    --bgcolor-danger: rgb(255 0 0);
+    --color-accent: #ff731d;
+    --bgcolor-danger: rgb(255, 80, 80);
   }
 }
 
 @media (prefers-color-scheme: dark) {
   html {
     --bgcolor: #191919;
-    --bgcolor-accent: #2d4263;
-    --bgcolor-inactive: #535353;
-    --color: #c84b31;
-    --color-accent: #ecdbba;
-    --bgcolor-danger: rgb(255 0 0);
+    --bgcolor-accent: #1e437d;
+    --bgcolor-inactive: #333333;
+    --bgcolor-textinput: #0e0e0e;
+    --color: #fff;
+    --color-accent: #bbb;;
+    --bgcolor-danger: rgb(169, 0, 0);
   }
 
   img {
@@ -50,19 +62,48 @@ html {
 body {
   background-color: var(--bgcolor);
   color: var(--color);
-  font-family: monospace;
   font-size: 1.6rem;
   line-height: 1.5;
 }
 
-small {
-  font-size: 1.2rem;
+body,
+button,
+input,
+select,
+textarea {
+  font-family: monospace;
 }
 
-*, ::after, ::before {
-  box-sizing: border-box;
+small,
+time {
+  font-size: var(--font-small);
 }
 
 .danger {
   background-color: var(--bgcolor-danger);
+}
+
+a {
+  color: var(--color-accent);
+}
+
+a:focus {
+  border-radius: var(--focus-border-radius);
+  outline: var(--focus-outline);
+  outline-offset: 0;
+}
+
+a:visited {
+  color: darkmagenta;
+}
+
+img[alt] {
+  font-size: .9rem;
+  text-align: center;
+  word-break: break-all;
+}
+
+pre {
+  margin: 0;
+  padding: .5rem 0;
 }
