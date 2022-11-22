@@ -7,7 +7,6 @@ pipeline:
   prepare_release:
     when:
       event: tag
-      branch: master
       tag: v*
     image: node:18-slim
     commands:
@@ -15,7 +14,6 @@ pipeline:
   create_release:
     when:
       event: tag
-      branch: master
       tag: v*
     image: plugins/gitea-release
     settings:
@@ -26,7 +24,6 @@ pipeline:
       note: "automated release by ${CI_SYSTEM_HOST} \nbuild id: ${CI_BUILD_NUMBER}"
   rsync_dist:
     when:
-      branch: master
       event: tag
       tag: v*
     image: alpine:3.16.2
