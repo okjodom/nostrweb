@@ -152,6 +152,12 @@ setInterval(() => {
   });
 }, 10000);
 
+function renderMultilineText(string) {
+  return string
+    .split('\n')
+    .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
+}
+
 function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
   const isLongContent = evt.content.length > 280;
@@ -172,7 +178,7 @@ function createTextNote(evt, relay) {
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
     ]),
-    elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, content),
+    elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, renderMultilineText(content)),
     elem('button', {
       className: 'btn-inline', name: 'star', type: 'button',
       data: {'eventId': evt.id, relay},
@@ -360,7 +366,7 @@ function getMetadata(evt, relay) {
 
 // reply
 const writeForm = document.querySelector('#writeForm');
-const input = document.querySelector('input[name="message"]');
+const input = document.querySelector('textarea[name="message"]');
 let lastReplyBtn = null;
 let replyTo = null;
 feedContainer.addEventListener('click', (e) => {
