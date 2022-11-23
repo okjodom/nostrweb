@@ -3,8 +3,8 @@ import {elem} from './domutil.js';
 import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
-pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
-pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
+// pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
