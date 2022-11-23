@@ -466,13 +466,13 @@ input.addEventListener('input', () => publish.disabled = !input.value);
 input.addEventListener('blur', () => sendStatus.textContent = '');
 
 // settings
-const form = document.querySelector('form[name="settings"]');
-const privateKeyInput = form.querySelector('#privatekey');
-const pubKeyInput = form.querySelector('#pubkey');
-const statusMessage = form.querySelector('#keystatus');
-const generateBtn = form.querySelector('button[name="generate"]');
-const importBtn = form.querySelector('button[name="import"]');
-const privateTgl = form.querySelector('button[name="privatekey-toggle"]');
+const settingsForm = document.querySelector('form[name="settings"]');
+const privateKeyInput = settingsForm.querySelector('#privatekey');
+const pubKeyInput = settingsForm.querySelector('#pubkey');
+const statusMessage = settingsForm.querySelector('#keystatus');
+const generateBtn = settingsForm.querySelector('button[name="generate"]');
+const importBtn = settingsForm.querySelector('button[name="import"]');
+const privateTgl = settingsForm.querySelector('button[name="privatekey-toggle"]');
 
 generateBtn.addEventListener('click', () => {
   const privatekey = generatePrivateKey();
@@ -497,7 +497,7 @@ importBtn.addEventListener('click', () => {
   }
 });
 
-form.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
+settingsForm.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
 
 function validKeys(privatekey, pubkey) {
   if (pubkey && privatekey) {
