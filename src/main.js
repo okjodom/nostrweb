@@ -56,8 +56,8 @@ const subscription = pool.sub({
   }
 });
 
-const textNoteList = [];
-const eventRelayMap = {};
+const textNoteList = []; // could use indexDB
+const eventRelayMap = {}; // eventId: [relay1, relay2]
 const hasEventTag = tag => tag[0] === 'e';
 
 function handleTextNote(evt, relay) {
