@@ -23,3 +23,15 @@ export function elem(name = 'div', {data, ...props} = {}, children = []) {
     }
     return el;
 }
+
+/**
+ * Renders line breaks
+ *
+ * @param {string} text with newlines
+ * @return Array<TextNode | HTMLBRElement>
+ */
+export function multilineText(string) {
+    return string
+      .split('\n')
+      .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
+}
