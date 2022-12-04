@@ -28,7 +28,8 @@ label {
 }
 
 input[type="password"],
-input[type="text"] {
+input[type="text"],
+textarea {
   background: var(--bgcolor-textinput);
   border: .2rem solid #b7b7b7;
   border-radius: .2rem;
@@ -36,10 +37,21 @@ input[type="text"] {
   margin: 0;
 }
 input[type="password"]:focus,
-input[type="text"]:focus {
+input[type="text"]:focus,
+textarea:focus {
   border-color: var(--focus-border-color);
-  outline-offset: 2px;
+  outline-offset: var(--focus-outline-offset);
+  outline: var(--focus-outline);
 }
+textarea {
+  max-height: 50vh;
+  min-height: 20px;
+  transition: min-height .1s ease-out, height .1s ease-out;
+}
+textarea:focus {
+  min-height: 3.5rem;
+}
+
 
 .buttons {
   align-items: center;
@@ -108,17 +120,23 @@ button:disabled {
   gap: 1rem;
 }
 .cards .form-inline button,
-.cards .form-inline input[type="text"] {
+.cards .form-inline input[type="text"],
+.cards .form-inline textarea {
   margin: .4rem 0;
-  padding: .6rem 1rem;
 }
 
-.form-inline input[type="text"] {
+.form-inline input[type="text"],
+.form-inline textarea {
   flex-grow: 1;
+  margin-bottom: 0;
 }
 
 .form-inline button {
   flex-grow: 0;
+}
+
+.form-inline button#publish {
+  align-self: end;
 }
 
 .focus-active {

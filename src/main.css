@@ -6,7 +6,8 @@
   /* 5px auto Highlight */
   --focus-border-color: rgb(0, 122, 255);
   --focus-border-radius: 2px;
-  --focus-outline-color: rgb(127, 189, 247);
+  --focus-outline-color: rgb(192, 227, 252);
+  --focus-outline-offset: 2px;
   --focus-outline-style: solid;
   --focus-outline-width: 2px;
   --focus-outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);

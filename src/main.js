@@ -120,7 +120,8 @@ function handleReaction(evt, relay) {
 // feed
 const feedContainer = document.querySelector('#homefeed');
 const feedDomMap = {};
-const replyDomMap = window.replyDomMap = {};
+const replyDomMap = {};
+const restoredReplyTo = localStorage.getItem('reply_to');
 
 const sortByCreatedAt = (evt1, evt2) => {
   if (evt1.created_at ===  evt2.created_at) {
@@ -191,6 +192,7 @@ function createTextNote(evt, relay) {
     }, [elem('img', {height: 24, width: 24, src: 'assets/comment.svg'})]),
     replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
   ]);
+  if (restoredReplyTo === evt.id) appendReplyForm(body.querySelector('button[name="reply"]'));
   return rendernArticle([img, body]);
 }
 
@@ -359,23 +361,11 @@ function getMetadata(evt, relay) {
 }
 
 // reply
-const writeForm = document.querySelector('#writeForm');
-const input = document.querySelector('textarea[name="message"]');
-let lastReplyBtn = null;
-let replyTo = null;
 feedContainer.addEventListener('click', (e) => {
   const button = e.target.closest('button');
   if (button && button.name === 'reply') {
-    if (lastReplyBtn) {
-      lastReplyBtn.hidden = false;
-    }
-    lastReplyBtn = button;
-    // button.hidden = true;
-    button.after(writeForm);
-    button.after(sendStatus);
-    writeForm.hidden = false;
-    replyTo = ['e', button.dataset.eventId, button.dataset.relay];
-    input.focus();
+    appendReplyForm(button);
+    localStorage.setItem('reply_to', button.dataset.eventId);
     return;
   }
   if (button && button.name === 'star') {
@@ -384,12 +374,21 @@ feedContainer.addEventListener('click', (e) => {
   }
 });
 
+const writeForm = document.querySelector('#writeForm');
+const writeInput = document.querySelector('textarea[name="message"]');
+
+function appendReplyForm(el) {
+  el.after(writeForm);
+  el.after(sendStatus);
+  writeInput.focus();
+}
+
 const newMessageDiv = document.querySelector('#newMessage');
 document.querySelector('#bubble').addEventListener('click', (e) => {
-  replyTo = null;
+  localStorage.removeItem('reply_to');
   newMessageDiv.prepend(writeForm);
   newMessageDiv.append(sendStatus);
-  input.focus();
+  writeInput.focus();
 });
 
 async function upvote(eventId, relay) {
@@ -428,14 +427,15 @@ writeForm.addEventListener('submit', async (e) => {
   if (!pubkey || !privatekey) {
     return onSendError(new Error('no pubkey/privatekey'));
   }
-  if (!input.value) {
+  if (!writeInput.value) {
     return onSendError(new Error('message is empty'));
   }
-  const tags = replyTo ? [replyTo] : [];
+  const replyTo = localStorage.getItem('reply_to');
+  const tags = replyTo ? [['e', replyTo, eventRelayMap[replyTo][0]]] : [];
   const newEvent = {
     kind: 1,
     pubkey,
-    content: input.value,
+    content: writeInput.value,
     tags,
     created_at: Math.floor(Date.now() * 0.001),
   };
@@ -447,12 +447,11 @@ writeForm.addEventListener('submit', async (e) => {
       }
       if (status === 1) {
         sendStatus.hidden = true;
-        input.value = '';
+        writeInput.value = '';
+        writeInput.style.removeProperty('height');
         publish.disabled = true;
-        if (lastReplyBtn) {
-          lastReplyBtn.hidden = false;
-          lastReplyBtn = null;
-          replyTo = null;
+        if (replyTo) {
+          localStorage.removeItem('reply_to');
           newMessageDiv.append(writeForm);
           newMessageDiv.append(sendStatus);
         }
@@ -462,8 +461,22 @@ writeForm.addEventListener('submit', async (e) => {
   }
 });
 
-input.addEventListener('input', () => publish.disabled = !input.value);
-input.addEventListener('blur', () => sendStatus.textContent = '');
+writeInput.addEventListener('input', () => {
+  publish.disabled = !writeInput.value;
+  updateElemHeight(writeInput);
+});
+writeInput.addEventListener('blur', () => sendStatus.textContent = '');
+
+function updateElemHeight(el) {
+  el.style.removeProperty('height');
+  if (el.value) {
+    el.style.paddingBottom = 0;
+    el.style.paddingTop = 0;
+    el.style.height = el.scrollHeight + 'px';
+    el.style.removeProperty('padding-bottom');
+    el.style.removeProperty('padding-top');
+  }
+}
 
 // settings
 const settingsForm = document.querySelector('form[name="settings"]');
