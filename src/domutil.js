@@ -31,7 +31,8 @@ export function elem(name = 'div', {data, ...props} = {}, children = []) {
  * @return Array<TextNode | HTMLBRElement>
  */
 export function multilineText(string) {
-    return string
-      .split('\n')
-      .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
+  return string
+    .trimRight()
+    .split('\n')
+    .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
 }

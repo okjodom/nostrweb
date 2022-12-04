@@ -1,0 +1,51 @@
+#bubble {
+  bottom: 4rem;
+  height: 10rem;
+  padding: 0;
+  position: fixed;
+  right: 5rem;
+  width: 10rem;
+  z-index: 12;
+}
+@media (orientation: portrait) {
+  #bubble {
+    bottom: calc(2 * var(--gap));
+    right: var(--gap);
+  }
+}
+
+#newMessage {
+  align-items: center;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 20;
+}
+
+#newMessage #writeForm {
+  align-items: start;
+  background-color: var(--bgcolor);
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  gap: 0;
+  justify-content: end;
+  max-height: 100vh;
+  min-height: 64vh;
+  outline: 100vh solid var(--bgcolor);
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+#newMessage .form-inline textarea {
+  flex-basis: 100%;
+  margin: var(--gap) 0;
+}
+
+#newMessage .buttons {
+  align-self: end;
+}

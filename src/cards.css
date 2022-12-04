@@ -1,26 +1,40 @@
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Media_objects */
 .mbox {
+  --profileimg-size: 5rem;
   align-items: center;
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
+  padding: 0 calc(.25 * var(--gap));
+}
+.mbox:last-child {
+  margin-bottom: 0;
+}
+.mbox .mbox {
+  padding: 0;
 }
 
 .mbox-img {
-  --size: 5rem;
   align-self: start;
-  flex-basis: var(--size);
-  height: var(--size);
+  background-color: var(--bgcolor-textinput);
+  border-radius: var(--profileimg-size);
+  border: 1px solid transparent;
+  flex-basis: var(--profileimg-size);
+  height: var(--profileimg-size);
   margin-right: 1rem;
-  margin-top: .5ch;
-  max-width: var(--size);
-  max-width: var(--size);
+  /* padding-top: .5ch; */
+  max-width: var(--profileimg-size);
+  max-width: var(--profileimg-size);
+  outline: .5rem solid var(--bgcolor);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
 }
 
 .mbox-updated-contact .mbox-img,
 .mbox-recommend-server .mbox-img {
-  --size: 4.5ch;
+  --profileimg-size: 4.5ch;
   margin-left: 3ch;
   margin-right: 3.5ch;
 }
@@ -61,4 +75,29 @@
 .mbox-updated-contact {
   padding: 0 0 1rem 0;
   margin: 0;
+}
+
+.mbox {
+  overflow: hidden;
+}
+.mbox .mbox {
+  overflow: visible;
+  position: relative;
+}
+.mobx-replies {
+  flex-grow: 1;
+  position: relative;
+}
+.mbox .mbox::before,
+.mobx-replies::before {
+  background-color: var(--bgcolor-inactive);
+  border: none;
+  content: "";
+  display: block;
+  height: 100vh;
+  left: calc(.5 * var(--profileimg-size));
+  margin-left: -.2rem;
+  position: absolute;
+  top: -100vh;
+  width: .4rem;
 }

@@ -3,8 +3,8 @@ import {elem, multilineText} from './domutil.js';
 import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
-// pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
-// pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
+pool.addRelay('wss://relay.damus.io', {read: true, write: true});
 pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 // pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
@@ -112,7 +112,7 @@ function handleReaction(evt, relay) {
     if (evt.pubkey === pubkey) {
       const star = button.querySelector('img[src$="star.svg"]');
       star.setAttribute('src', 'assets/star-fill.svg');
-      star.setAttribute('title', reactionMap[eventId])
+      star.setAttribute('title', reactionMap[eventId]);
     }
   }
 }
@@ -155,7 +155,7 @@ setInterval(() => {
 
 function createTextNote(evt, relay) {
   const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
-  const isLongContent = evt.content.length > 280;
+  const isLongContent = evt.content.trimRight().length > 280;
   const content = isLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
   const hasReactions = reactionMap[evt.id]?.length > 0;
   const didReact = hasReactions && !!reactionMap[evt.id].find(reaction => reaction.pubkey === pubkey);
@@ -190,10 +190,16 @@ function createTextNote(evt, relay) {
       className: 'btn-inline', name: 'reply', type: 'button',
       data: {'eventId': evt.id, relay},
     }, [elem('img', {height: 24, width: 24, src: 'assets/comment.svg'})]),
+    // replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
+  ]);
+  if (restoredReplyTo === evt.id) {
+    appendReplyForm(body.querySelector('button[name="reply"]'));
+    requestAnimationFrame(() => updateElemHeight(writeInput));
+  }
+  return rendernArticle([
+    elem('div', {className: 'mbox-img'}, [img]), body,
     replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
   ]);
-  if (restoredReplyTo === evt.id) appendReplyForm(body.querySelector('button[name="reply"]'));
-  return rendernArticle([img, body]);
 }
 
 function handleReply(evt, relay) {
@@ -214,7 +220,7 @@ function renderReply(evt, relay) {
   let replyContainer = article.querySelector('.mobx-replies');
   if (!replyContainer) {
     replyContainer = elem('div', {className: 'mobx-replies'});
-    article.querySelector('.mbox-body').append(replyContainer);
+    article.append(replyContainer);
   }
   const reply = createTextNote(evt, relay);
   replyContainer.append(reply);
@@ -291,7 +297,7 @@ function renderRecommendServer(evt, relay) {
     ]),
     ` recommends server: ${evt.content}`,
   ]);
-  return rendernArticle([img, body], {className: 'mbox-recommend-server', data: {relay: evt.content}});
+  return rendernArticle([elem('div', {className: 'mbox-img'}, [img]), body], {className: 'mbox-recommend-server', data: {relay: evt.content}});
 }
 
 function rendernArticle(content, props = {}) {
@@ -349,7 +355,6 @@ function getMetadata(evt, relay) {
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = elem('img', {
-    className: 'mbox-img',
     src: userImg,
     alt: `${userName} ${host}`,
     title: `${userName} on ${host} ${userAbout}`,
@@ -378,18 +383,44 @@ const writeForm = document.querySelector('#writeForm');
 const writeInput = document.querySelector('textarea[name="message"]');
 
 function appendReplyForm(el) {
+  const shrink = elem('div', {className: 'shrink-out'});
+  shrink.style.height = `${writeInput.style.height || writeInput.getBoundingClientRect().height}px`;
+  shrink.addEventListener('animationend', () => shrink.remove());
+  writeForm.before(shrink);
+  writeInput.blur();
+  writeInput.style.removeProperty('height');
   el.after(writeForm);
-  el.after(sendStatus);
-  writeInput.focus();
+  if (writeInput.value && !writeInput.value.trimRight()) {
+    writeInput.value = '';
+  } else {
+    requestAnimationFrame(() => updateElemHeight(writeInput));
+  }
+  requestAnimationFrame(() => writeInput.focus());
 }
 
 const newMessageDiv = document.querySelector('#newMessage');
 document.querySelector('#bubble').addEventListener('click', (e) => {
-  localStorage.removeItem('reply_to');
+  localStorage.removeItem('reply_to'); // should it forget old replyto context?
   newMessageDiv.prepend(writeForm);
-  newMessageDiv.append(sendStatus);
+  hideNewMessage(false);
   writeInput.focus();
+  if (writeInput.value.trimRight()) {
+    writeInput.style.removeProperty('height');
+  }
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => updateElemHeight(writeInput));
 });
+
+document.body.addEventListener('keyup', (e) => {
+  if (e.key === 'Escape') {
+    hideNewMessage(true);
+  }
+});
+
+function hideNewMessage(hide) {
+  document.body.style.removeProperty('overflow');
+  newMessageDiv.hidden = hide;
+}
 
 async function upvote(eventId, relay) {
   const privatekey = localStorage.getItem('private_key');
@@ -415,10 +446,7 @@ async function upvote(eventId, relay) {
 
 // send
 const sendStatus = document.querySelector('#sendstatus');
-const onSendError = err => {
-  sendStatus.textContent = err.message;
-  sendStatus.hidden = false;
-};
+const onSendError = err => sendStatus.textContent = err.message;
 const publish = document.querySelector('#publish');
 writeForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -447,14 +475,13 @@ writeForm.addEventListener('submit', async (e) => {
         console.info(`publish request sent to ${url}`);
       }
       if (status === 1) {
-        sendStatus.hidden = true;
+        sendStatus.textContent = '';
         writeInput.value = '';
         writeInput.style.removeProperty('height');
         publish.disabled = true;
         if (replyTo) {
           localStorage.removeItem('reply_to');
           newMessageDiv.append(writeForm);
-          newMessageDiv.append(sendStatus);
         }
         // console.info(`event published by ${url}`, ev);
       }
@@ -546,5 +573,9 @@ document.body.addEventListener('click', (e) => {
     append.textContent += append.dataset.append;
     delete append.dataset.append;
     return;
+  }
+  const back = e.target.closest('[name="back"]')
+  if (back) {
+    hideNewMessage(true);
   }
 });

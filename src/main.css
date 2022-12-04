@@ -1,6 +1,7 @@
 @import "tabs.css";
 @import "cards.css";
 @import "form.css";
+@import "write.css";
 
 :root {
   /* 5px auto Highlight */
@@ -12,6 +13,7 @@
   --focus-outline-width: 2px;
   --focus-outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
   --font-small: 1.2rem;
+  --gap: 2.4rem;
 }
 
 ::selection {
@@ -26,7 +28,7 @@
 @media (prefers-color-scheme: light) {
   html {
     --bgcolor: #fdfefa;
-    --bgcolor-accent: #37ff1d;
+    --bgcolor-accent: #7badfc;
     --bgcolor-inactive: #bababa;
     --bgcolor-textinput: #fff;
     --color: rgb(68 68 68);
@@ -39,7 +41,7 @@
   html {
     --bgcolor: #191919;
     --bgcolor-accent: #1e437d;
-    --bgcolor-inactive: #333333;
+    --bgcolor-inactive: #434343;
     --bgcolor-textinput: #0e0e0e;
     --color: #fff;
     --color-accent: #bbb;;
@@ -65,6 +67,7 @@ body {
   color: var(--color);
   font-size: 1.6rem;
   line-height: 1.5;
+  margin: 0;
 }
 
 body,

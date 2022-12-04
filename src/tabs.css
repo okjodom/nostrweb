@@ -1,4 +1,7 @@
-.tabs { margin-top: 4rem; }
+.tabs {
+  flex-basis: 100%;
+  margin-top: 4rem;
+}
 .tabs .tab-content { display: none; }
 #feed:checked ~ .tabs .tab-content:nth-child(1),
 #trending:checked ~ .tabs .tab-content:nth-child(2),
@@ -15,13 +18,17 @@ input[type="radio"].tab {
 }
 
 .tab + label {
+  background-color: var(--bgcolor-textinput);
   border: none;
   color: var(--color);
   display: inline-block;
+  margin-left: var(--gap);
+  margin-top: var(--gap);
   outline: 2px solid var(--bgcolor-accent);
   padding: 1rem 1.5em;
   position: relative;
   top: 1px;
+  z-index: 11;
 }
 input[type="radio"]:checked + label {
   background: var(--bgcolor-accent);
@@ -38,18 +45,34 @@ input[type="radio"]:checked + label {
 .tab-content {
   max-width: 96ch;
   min-height: 200px;
+  padding: calc(.5 * var(--gap)) 0 100px 0;
 }
-
-/*
-
-
-
-.tab {
-  float: left;
+.tabbed {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
 }
+@media (orientation: portrait) {
+  .tabbed {
+    align-items: start;
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: start;
+  }
+  .tabs {
+    height: 100vh;
+    margin-top: 0;
+    order: 1;
+    overflow: scroll;
+    width: 100vw;
+  }
+  .tab + label {
+    margin-top: calc(-3 * var(--gap));
+    margin-left: var(--gap);
+    order: 2;
+  }
+  .cards {
 
-.tab > label {
+  }
 }
-
-
-*/
