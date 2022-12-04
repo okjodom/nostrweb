@@ -427,7 +427,8 @@ writeForm.addEventListener('submit', async (e) => {
   if (!pubkey || !privatekey) {
     return onSendError(new Error('no pubkey/privatekey'));
   }
-  if (!writeInput.value) {
+  const content = writeInput.value.trimRight();
+  if (!content) {
     return onSendError(new Error('message is empty'));
   }
   const replyTo = localStorage.getItem('reply_to');
@@ -435,7 +436,7 @@ writeForm.addEventListener('submit', async (e) => {
   const newEvent = {
     kind: 1,
     pubkey,
-    content: writeInput.value,
+    content,
     tags,
     created_at: Math.floor(Date.now() * 0.001),
   };
@@ -462,7 +463,7 @@ writeForm.addEventListener('submit', async (e) => {
 });
 
 writeInput.addEventListener('input', () => {
-  publish.disabled = !writeInput.value;
+  publish.disabled = !writeInput.value.trimRight();
   updateElemHeight(writeInput);
 });
 writeInput.addEventListener('blur', () => sendStatus.textContent = '');
