@@ -132,18 +132,18 @@ const sortByCreatedAt = (evt1, evt2) => {
 
 function renderFeed() {
   const sortedFeeds = textNoteList.sort(sortByCreatedAt).reverse();
-  sortedFeeds.forEach((textNoteEvent, i) => {
-    if (feedDomMap[textNoteEvent.id]) {
+  sortedFeeds.forEach((evt, i) => {
+    if (feedDomMap[evt.id]) {
       // TODO check eventRelayMap if event was published to different relays
       return;
     }
-    const article = createTextNote(textNoteEvent, eventRelayMap[textNoteEvent.id]);
+    const article = createTextNote(evt, eventRelayMap[evt.id]);
     if (i === 0) {
       feedContainer.append(article);
     } else {
       feedDomMap[sortedFeeds[i - 1].id].before(article);
     }
-    feedDomMap[textNoteEvent.id] = article;
+    feedDomMap[evt.id] = article;
   });
 }
 
