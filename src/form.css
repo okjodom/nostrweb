@@ -46,6 +46,7 @@ textarea:focus {
 textarea {
   max-height: 50vh;
   min-height: 20px;
+  resize: none;
   transition: min-height .1s ease-out, height .1s ease-out;
 }
 textarea:focus {
