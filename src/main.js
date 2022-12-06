@@ -52,7 +52,7 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 500,
+    limit: 750,
   }
 });
 
@@ -318,11 +318,24 @@ function handleMetadata(evt, relay) {
   }
 }
 
+const getNoxyUrl = (id, relay, url) => {
+  if (!isHttpUrl(url)) {
+    return false;
+  }
+  const picture = new URL('https://noxy.nostr.ch/data');
+  picture.searchParams.set('id', id);
+  picture.searchParams.set('relay', relay);
+  picture.searchParams.set('url', url);
+  return picture.href;
+}
+
 function setMetadata(evt, relay, content) {
   const user = userList.find(u => u.pubkey === evt.pubkey);
+  const picture = getNoxyUrl(evt.id, relay, content.picture);
   if (!user) {
     userList.push({
       metadata: {[relay]: content},
+      ...(content.picture && {picture}),
       pubkey: evt.pubkey,
     });
   } else {
@@ -331,6 +344,9 @@ function setMetadata(evt, relay, content) {
       timestamp: evt.created_at,
       ...content,
     };
+    if (!user.picture) {
+      user.picture = picture;
+    } // no support (yet) for other picture from same pubkey on different relays
   }
   // if (tempContactList[relay]) {
   //   const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
@@ -338,6 +354,14 @@ function setMetadata(evt, relay, content) {
   //     console.log('TODO: add contact list (kind 3)', updates);
   //   }
   // }
+}
+
+function isHttpUrl(string) {
+  try {
+    return ['http:', 'https:'].includes(new URL(string).protocol);
+  } catch (err) {
+    return false;
+  }
 }
 
 const getHost = (url) => {
@@ -351,7 +375,7 @@ const getHost = (url) => {
 function getMetadata(evt, relay) {
   const host = getHost(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = /*user?.metadata[relay]?.picture || */'assets/bubble.svg'; // TODO: enable pic once we have proxy
+  const userImg = user?.picture || 'assets/bubble.svg';
   const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = elem('img', {

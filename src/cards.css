@@ -31,6 +31,9 @@
   position: relative;
   z-index: 2;
 }
+.mbox-img img {
+  max-width: 100%;
+}
 
 .mbox-updated-contact .mbox-img,
 .mbox-recommend-server .mbox-img {
