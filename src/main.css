@@ -88,6 +88,10 @@ img {
   max-width: 100%;
 }
 
+main.text {
+  margin: 2rem;
+}
+
 .danger {
   background-color: var(--bgcolor-danger);
 }
