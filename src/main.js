@@ -541,19 +541,17 @@ importBtn.addEventListener('click', () => {
 settingsForm.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
 
 function validKeys(privatekey, pubkey) {
-  if (pubkey && privatekey) {
-    try {
-      if (getPublicKey(privatekey) === pubkey) {
-        statusMessage.hidden = true;
-        statusMessage.textContent = 'public-key corresponds to private-key';
-        importBtn.removeAttribute('disabled');
-        return true;
-      } else {
-        statusMessage.textContent = 'private-key does not correspond to public-key!'
-      }
-    } catch (e) {
-      statusMessage.textContent = `not a valid private-key: ${e.message || e}`;
+  try {
+    if (getPublicKey(privatekey) === pubkey) {
+      statusMessage.hidden = true;
+      statusMessage.textContent = 'public-key corresponds to private-key';
+      importBtn.removeAttribute('disabled');
+      return true;
+    } else {
+      statusMessage.textContent = 'private-key does not correspond to public-key!'
     }
+  } catch (e) {
+    statusMessage.textContent = `not a valid private-key: ${e.message || e}`;
   }
   statusMessage.hidden = false;
   importBtn.setAttribute('disabled', true);
