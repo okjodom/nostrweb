@@ -169,7 +169,7 @@ const elemCanvas = (text) => {
 function createTextNote(evt, relay) {
   const {host, img, isReply, name, replies, time, userName} = getMetadata(evt, relay);
   const isLongContent = evt.content.trimRight().length > 280;
-  const content = isLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
+  const content = isLongContent ? evt.content.slice(0, 280) : evt.content;
   const hasReactions = reactionMap[evt.id]?.length > 0;
   const didReact = hasReactions && !!reactionMap[evt.id].find(reaction => reaction.pubkey === pubkey);
   const replyFeed = replies[0] ? replies.map(e => replyDomMap[e.id] = createTextNote(e, relay)) : [];
@@ -604,10 +604,10 @@ privateKeyInput.value = localStorage.getItem('private_key');
 pubKeyInput.value = localStorage.getItem('pub_key');
 
 document.body.addEventListener('click', (e) => {
-  const append = e.target.closest('[data-append]');
-  if (append) {
-    append.textContent += append.dataset.append;
-    delete append.dataset.append;
+  const container = e.target.closest('[data-append]');
+  if (container) {
+    container.append(...multilineText(container.dataset.append));
+    delete container.dataset.append;
     return;
   }
   const back = e.target.closest('[name="back"]')

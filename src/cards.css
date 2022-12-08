@@ -110,3 +110,8 @@
   top: -100vh;
   width: .4rem;
 }
+
+[data-append]::after {
+  color: var(--color-accent);
+  content: "…";
+}
