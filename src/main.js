@@ -604,6 +604,19 @@ importBtn.addEventListener('click', () => {
 });
 
 settingsForm.addEventListener('input', () => validKeys(privateKeyInput.value, pubKeyInput.value));
+privateKeyInput.addEventListener('paste', (event) => {
+  if (pubKeyInput.value || !event.clipboardData) {
+    return;
+  }
+  if (privateKeyInput.value === '' || (
+    privateKeyInput.selectionStart === 0
+    && privateKeyInput.selectionEnd === privateKeyInput.value.length
+  )) {
+    try {
+      pubKeyInput.value = getPublicKey(event.clipboardData.getData('text'));
+    } catch(err) {} // settings form will call validKeys on input and display the error
+  }
+});
 
 function validKeys(privatekey, pubkey) {
   try {

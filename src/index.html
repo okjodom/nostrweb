@@ -59,16 +59,16 @@
             <input type="text" name="username" id="username" placeholder="username">
             <button type="button" name="publish-username" tabindex="0">publish</button>
           </div> -->
-          <form action="#" name="settings">
+          <form action="#" name="settings" autocomplete="new-password">
             <label for="pubkey">public-key</label>
-            <input type="text" id="pubkey">
+            <input type="text" id="pubkey" autocomplete="off">
             <label for="privatekey">
               private-key
               <button type="button" name="privatekey-toggle" class="btn-inline" >
                 <small>show</small>
               </button>
             </label>
-            <input type="password" id="privatekey">
+            <input type="password" id="privatekey" autocomplete="off">
             <div class="buttons">
               <small id="keystatus" class="form-status" hidden></small>
               <button type="button" name="generate" tabindex="0">new</button>
