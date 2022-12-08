@@ -52,7 +52,7 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 750,
+    limit: 75,
   }
 });
 
@@ -405,10 +405,13 @@ function getMetadata(evt, relay) {
   return {host, img, isReply, name, replies, time, userName};
 }
 
-// reply
 feedContainer.addEventListener('click', (e) => {
   const button = e.target.closest('button');
   if (button && button.name === 'reply') {
+    if (localStorage.getItem('reply_to') === button.dataset.eventId) {
+      writeInput.blur();
+      return;
+    }
     appendReplyForm(button);
     localStorage.setItem('reply_to', button.dataset.eventId);
     return;
@@ -422,11 +425,29 @@ feedContainer.addEventListener('click', (e) => {
 const writeForm = document.querySelector('#writeForm');
 const writeInput = document.querySelector('textarea[name="message"]');
 
-function appendReplyForm(el) {
+const elemShrink = () => {
+  const height = writeInput.style.height || writeInput.getBoundingClientRect().height;
   const shrink = elem('div', {className: 'shrink-out'});
-  shrink.style.height = `${writeInput.style.height || writeInput.getBoundingClientRect().height}px`;
-  shrink.addEventListener('animationend', () => shrink.remove());
-  writeForm.before(shrink);
+  shrink.style.height = `${height}px`;
+  shrink.addEventListener('animationend', () => shrink.remove(), {once: true});
+  return shrink;
+}
+
+writeInput.addEventListener('focusout', () => {
+  const reply_to = localStorage.getItem('reply_to');
+  if (reply_to && writeInput.value === '') {
+    writeInput.addEventListener('transitionend', (event) => {
+      if (!reply_to || reply_to === localStorage.getItem('reply_to') && !writeInput.style.height) { // should prob use some class or data-attr instead of relying on height
+        writeForm.after(elemShrink());
+        writeForm.remove();
+        localStorage.removeItem('reply_to');
+      }
+    }, {once: true});
+  }
+});
+
+function appendReplyForm(el) {
+  writeForm.before(elemShrink());
   writeInput.blur();
   writeInput.style.removeProperty('height');
   el.after(writeForm);

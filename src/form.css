@@ -202,7 +202,7 @@ button[name="back"] {
 .shrink-out {
   animation-duration: var(--transition-duration);
   animation-name: lineInserted;
-  transition: max-height var(--transition-duration) var(--transition-timing-function);
+  transition: max-height calc(.5 * var(--transition-duration)) var(--transition-timing-function);
 }
 @keyframes lineInserted {
   from {
