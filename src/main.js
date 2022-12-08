@@ -301,7 +301,7 @@ function renderUpdateContact(evt, relay) {
 }
 
 function renderRecommendServer(evt, relay) {
-  const {img, time, userName} = getMetadata(evt, relay);
+  const {img, name, time, userName} = getMetadata(evt, relay);
   const body = elem('div', {className: 'mbox-body', title: dateTime.format(time)}, [
     elem('header', {className: 'mbox-header'}, [
       elem('small', {}, [
@@ -310,7 +310,9 @@ function renderRecommendServer(evt, relay) {
     ]),
     ` recommends server: ${evt.content}`,
   ]);
-  return rendernArticle([elem('div', {className: 'mbox-img'}, [img]), body], {className: 'mbox-recommend-server', data: {relay: evt.content}});
+  return rendernArticle([elem('div', {className: 'mbox-img'}, [
+    (name && img) ? img : elemCanvas(userName)]), body
+  ], {className: 'mbox-recommend-server', data: {relay: evt.content}});
 }
 
 function rendernArticle(content, props = {}) {
@@ -388,7 +390,7 @@ const getHost = (url) => {
 function getMetadata(evt, relay) {
   const host = getHost(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
-  const userImg = user?.picture || 'assets/bubble.svg';
+  const userImg = user?.picture;
   const name = user?.metadata[relay]?.name;
   const userName = name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';

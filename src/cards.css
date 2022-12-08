@@ -29,7 +29,7 @@
   height: var(--profileimg-size);
   margin-right: 1rem;
   /* padding-top: .5ch; */
-  max-width: var(--profileimg-size);
+  max-height: var(--profileimg-size);
   max-width: var(--profileimg-size);
   outline: .5rem solid var(--bgcolor);
   overflow: hidden;
@@ -37,11 +37,15 @@
   z-index: 2;
 }
 
+.mbox-img canvas,
+.mbox-img img {
+  display: block;
+}
+
 .mbox-updated-contact .mbox-img,
 .mbox-recommend-server .mbox-img {
-  --profileimg-size: 4.5ch;
-  margin-left: 3ch;
-  margin-right: 3.5ch;
+  --profileimg-size: 2rem;
+  margin-left: 2rem;
 }
 
 .mbox-body {
@@ -58,9 +62,7 @@
   margin-top: 0;
 }
 .mbox-header time,
-.mbox-username,
-.mbox-updated-contact,
-.mbox mbox-recommend-server {
+.mbox-username {
   color: var(--color-accent);
 }
 
@@ -71,7 +73,6 @@
 .mbox-updated-contact .mbox-body,
 .mbox-recommend-server .mbox-body {
   display: block;
-  flex-basis: 100%;
   font-size: var(--font-small);
   overflow: scroll;
 }

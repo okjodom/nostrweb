@@ -9,7 +9,6 @@ export const options = {
     'src/main.js',
     'src/main.css',
     'src/index.html',
-    'src/assets/bubble.svg',
     'src/assets/comment.svg',
     'src/assets/heart-fill.svg',
     'src/assets/star.svg',
