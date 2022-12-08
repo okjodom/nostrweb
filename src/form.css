@@ -145,7 +145,7 @@ button:disabled {
 .form-status {
   flex-basis: 100%;
   flex-grow: 1;
-  padding: 1rem 1.8rem;
+  padding: var(--padding);
 }
 
 .form-inline {
@@ -154,8 +154,10 @@ button:disabled {
   flex-direction: row;
   flex-grow: 1;
   flex-wrap: wrap;
-  gap: 0 var(--gap);
   padding: 0;
+}
+.form-inline * + * {
+  margin-left: var(--gap);
 }
 .cards .form-inline button,
 .cards .form-inline input[type="text"],
@@ -189,6 +191,7 @@ button[name="back"] {
 }
 
 #sendstatus {
+  margin-left: 0;
   order: 1;
 }
 

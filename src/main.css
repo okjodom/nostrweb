@@ -40,11 +40,11 @@
 @media (prefers-color-scheme: dark) {
   html {
     --bgcolor: #191919;
-    --bgcolor-accent: #1e437d;
+    --bgcolor-accent: rgb(16, 93, 176);
     --bgcolor-inactive: #434343;
     --bgcolor-textinput: #0e0e0e;
-    --color: #fff;
-    --color-accent: #bbb;;
+    --color: #e3e3e3;
+    --color-accent: #7b7b7b;
     --bgcolor-danger: rgb(169, 0, 0);
   }
 
@@ -81,6 +81,11 @@ textarea {
 small,
 time {
   font-size: var(--font-small);
+}
+
+canvas,
+img {
+  max-width: 100%;
 }
 
 .danger {

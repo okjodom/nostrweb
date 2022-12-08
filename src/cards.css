@@ -1,12 +1,17 @@
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Media_objects */
 .mbox {
-  --profileimg-size: 5rem;
+  --profileimg-size: 4rem;
   align-items: center;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   margin-bottom: 1rem;
-  padding: 0 calc(.25 * var(--gap));
+  padding: 0 var(--gap);
+}
+@media (orientation: portrait) {
+  .mbox {
+    padding: 0 calc(.5 * var(--gap));
+  }
 }
 .mbox:last-child {
   margin-bottom: 0;
@@ -30,9 +35,6 @@
   overflow: hidden;
   position: relative;
   z-index: 2;
-}
-.mbox-img img {
-  max-width: 100%;
 }
 
 .mbox-updated-contact .mbox-img,
@@ -60,6 +62,10 @@
 .mbox-updated-contact,
 .mbox mbox-recommend-server {
   color: var(--color-accent);
+}
+
+.mbox-kind0-name {
+  color: var(--color);
 }
 
 .mbox-updated-contact .mbox-body,

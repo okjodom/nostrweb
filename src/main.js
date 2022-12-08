@@ -153,8 +153,21 @@ setInterval(() => {
   });
 }, 10000);
 
+
+const elemCanvas = (text) => {
+  const canvas = elem('canvas', {height: 80, width: 80});
+  const context = canvas.getContext('2d');
+  context.fillStyle = `#${text.slice(0, 6)}`;
+  context.fillRect(0, 0, 80, 80);
+  context.fillStyle = '#111';
+  context.fillRect(0, 50, 80, 32);
+  context.font = 'bold 18px monospace';
+  context.fillText(text, 2, 46);
+  return canvas;
+}
+
 function createTextNote(evt, relay) {
-  const {host, img, isReply, replies, time, userName} = getMetadata(evt, relay);
+  const {host, img, isReply, name, replies, time, userName} = getMetadata(evt, relay);
   const isLongContent = evt.content.trimRight().length > 280;
   const content = isLongContent ? `${evt.content.slice(0, 280)}…` : evt.content;
   const hasReactions = reactionMap[evt.id]?.length > 0;
@@ -168,7 +181,7 @@ function createTextNote(evt, relay) {
       ${isReply ? `\nReply to ${evt.tags[0][1]}\n` : ''}`
     }, [
       elem('small', {}, [
-        elem('strong', {className: 'mbox-username'}, userName),
+        elem('strong', {className: name ? 'mbox-kind0-name' : 'mbox-username'}, name || userName),
         ' ',
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
@@ -197,7 +210,7 @@ function createTextNote(evt, relay) {
     requestAnimationFrame(() => updateElemHeight(writeInput));
   }
   return rendernArticle([
-    elem('div', {className: 'mbox-img'}, [img]), body,
+    elem('div', {className: 'mbox-img'}, [(name && img) ? img : elemCanvas(userName)]), body,
     replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
   ]);
 }
@@ -376,7 +389,8 @@ function getMetadata(evt, relay) {
   const host = getHost(relay);
   const user = userList.find(user => user.pubkey === evt.pubkey);
   const userImg = user?.picture || 'assets/bubble.svg';
-  const userName = user?.metadata[relay]?.name || evt.pubkey.slice(0, 8);
+  const name = user?.metadata[relay]?.name;
+  const userName = name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = elem('img', {
     src: userImg,
@@ -386,7 +400,7 @@ function getMetadata(evt, relay) {
   const isReply = evt.tags.some(hasEventTag);
   const replies = replyList.filter((reply) => reply.tags[0][1] === evt.id);
   const time = new Date(evt.created_at * 1000);
-  return {host, img, isReply, replies, time, userName};
+  return {host, img, isReply, name, replies, time, userName};
 }
 
 // reply
