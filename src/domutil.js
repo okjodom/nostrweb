@@ -33,6 +33,7 @@ export function elem(name = 'div', {data, ...props} = {}, children = []) {
 export function multilineText(string) {
   return string
     .trimRight()
+    .replaceAll(/\n{3,}/g, '\n\n')
     .split('\n')
     .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
 }
