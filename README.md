@@ -1,6 +1,6 @@
 # nostr web client
 
-this is a web interface to [nostr](https://nostr.info/).
+this is a web interface to [nostr](https://github.com/nostr-protocol/nostr#readme).
 a live instance is hosted at https://nostr.ch/
 
 some useful resources:
