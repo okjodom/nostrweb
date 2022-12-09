@@ -1,6 +1,8 @@
-# nostr web sandbox
+# nostr web client
 
-a playground for a web interface to [nostr](https://nostr.info/).
+this is a web interface to [nostr](https://nostr.info/).
+a live instance is hosted at https://nostr.ch/
+
 some useful resources:
 
 * JS library used in this project: https://github.com/fiatjaf/nostr-tools
