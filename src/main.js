@@ -77,6 +77,10 @@ function handleTextNote(evt, relay) {
 const replyList = [];
 const reactionMap = {};
 
+const getReactionList = (id) => {
+  return reactionMap[id]?.map(({content}) => content) || [];
+};
+
 function handleReaction(evt, relay) {
   if (!evt.content.length) {
     // console.log('reaction with no content', evt)
@@ -110,9 +114,9 @@ function handleReaction(evt, relay) {
     const reactions = button.querySelector('[data-reactions]');
     reactions.textContent = reactionMap[eventId].length;
     if (evt.pubkey === pubkey) {
-      const star = button.querySelector('img[src$="star.svg"]');
-      star.setAttribute('src', 'assets/star-fill.svg');
-      star.setAttribute('title', reactionMap[eventId]);
+      const star = button.querySelector('img[src*="star"]');
+      star?.setAttribute('src', 'assets/star-fill.svg');
+      star?.setAttribute('title', getReactionList(eventId).join(' '));
     }
   }
 }
@@ -183,7 +187,7 @@ function createTextNote(evt, relay) {
         alt: didReact ? '✭' : '✩', // ♥
         height: 24, width: 24,
         src: `assets/${didReact ? 'star-fill' : 'star'}.svg`,
-        title: reactionMap[evt.id]?.map(({content}) => content).join(' '),
+        title: getReactionList(evt.id).join(' '),
       }),
       elem('small', {data: {reactions: evt.id}}, hasReactions ? reactionMap[evt.id].length : ''),
     ]),
