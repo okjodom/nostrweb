@@ -1,5 +1,5 @@
 import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tools';
-import {elem, multilineText} from './domutil.js';
+import {elem, parseTextContent} from './domutil.js';
 import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://nostr.x1ddos.ch
 const pool = relayPool();
@@ -155,11 +155,12 @@ setInterval(() => {
 
 function createTextNote(evt, relay) {
   const {host, img, isReply, name, replies, time, userName} = getMetadata(evt, relay);
-  const isLongContent = evt.content.trimRight().length > 280;
-  const content = isLongContent ? evt.content.slice(0, 280) : evt.content;
+  // const isLongContent = evt.content.trimRight().length > 280;
+  // const content = isLongContent ? evt.content.slice(0, 280) : evt.content;
   const hasReactions = reactionMap[evt.id]?.length > 0;
   const didReact = hasReactions && !!reactionMap[evt.id].find(reaction => reaction.pubkey === pubkey);
   const replyFeed = replies[0] ? replies.map(e => replyDomMap[e.id] = createTextNote(e, relay)) : [];
+  const content = parseTextContent(evt.content);
   const body = elem('div', {className: 'mbox-body'}, [
     elem('header', {
       className: 'mbox-header',
@@ -173,7 +174,7 @@ function createTextNote(evt, relay) {
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
     ]),
-    elem('div', {data: isLongContent ? {append: evt.content.slice(280)} : null}, multilineText(content)),
+    elem('div', {/* data: isLongContent ? {append: evt.content.slice(280)} : null*/}, content),
     elem('button', {
       className: 'btn-inline', name: 'star', type: 'button',
       data: {'eventId': evt.id, relay},
@@ -630,12 +631,12 @@ privateKeyInput.value = localStorage.getItem('private_key');
 pubKeyInput.value = localStorage.getItem('pub_key');
 
 document.body.addEventListener('click', (e) => {
-  const container = e.target.closest('[data-append]');
-  if (container) {
-    container.append(...multilineText(container.dataset.append));
-    delete container.dataset.append;
-    return;
-  }
+  // const container = e.target.closest('[data-append]');
+  // if (container) {
+  //   container.append(...parseTextContent(container.dataset.append));
+  //   delete container.dataset.append;
+  //   return;
+  // }
   const back = e.target.closest('[name="back"]')
   if (back) {
     hideNewMessage(true);

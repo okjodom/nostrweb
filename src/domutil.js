@@ -24,16 +24,52 @@ export function elem(name = 'div', {data, ...props} = {}, children = []) {
     return el;
 }
 
-/**
- * Renders line breaks
- *
- * @param {string} text with newlines
- * @return Array<TextNode | HTMLBRElement>
- */
-export function multilineText(string) {
-  return string
-    .trimRight()
-    .replaceAll(/\n{3,}/g, '\n\n')
-    .split('\n')
-    .reduce((acc, next, i) => acc.concat(i === 0 ? next : [elem('br'), next]), []);
+function isValidURL(url) {
+    if (!['http:', 'https:'].includes(url.protocol)) {
+        return false;
+    }
+    if (!['', '443', '80'].includes(url.port)) {
+        return false;
+    }
+    const lastDot = url.hostname.lastIndexOf('.');
+    if (lastDot < 1) {
+        return false;
+    }
+    if (url.hostname.slice(lastDot) === '.local') {
+        return false;
+    }
+    return true;
+}
+
+export function parseTextContent(string) {
+    return string
+        .trimRight()
+        .replaceAll(/\n{3,}/g, '\n\n')
+        .split('\n')
+        .map(line => {
+            const words = line.split(' ');
+            return words.map(word => {
+                if (!word.match(/(https?:\/\/|www\.)\S*/)) {
+                    return word;
+                }
+                try {
+                    if (!word.startsWith('http')) {
+                        word = 'https://' + word;
+                    }
+                    const url = new URL(word);
+                    if (!isValidURL(url)) {
+                        return word;
+                    }
+                    return elem('a', {
+                        href: url.href,
+                        target: '_blank',
+                        rel: 'noopener noreferrer'
+                    }, url.href.slice(url.protocol.length + 2));
+                } catch (err) {
+                    return word;
+                }
+            })
+            .reduce((acc, word) => [...acc, word, ' '], []);
+        })
+        .reduce((acc, words) => [...acc, ...words, elem('br')], []);
 }
