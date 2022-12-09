@@ -52,7 +52,7 @@ const subscription = pool.sub({
     //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
     // ],
     // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 75,
+    limit: 250,
   }
 });
 
@@ -157,6 +157,45 @@ setInterval(() => {
   });
 }, 10000);
 
+const getNoxyUrl = (type, url, id, relay) => {
+  if (!isHttpUrl(url)) {
+    return false;
+  }
+  const link = new URL(`https://noxy.nostr.ch/${type}`);
+  link.searchParams.set('id', id);
+  link.searchParams.set('relay', relay);
+  link.searchParams.set('url', url);
+  return link;
+}
+
+function linkPreview(href, id, relay) {
+  if ((/\.(gif|jpe?g|png)$/i).test(href)) {
+    return elem('div', {},
+      [elem('img', {className: 'preview-image-only', src: getNoxyUrl('data', href, id, relay).href})]
+    );
+  }
+  const noxy = getNoxyUrl('meta', href, id, relay);
+  const previewId = noxy.searchParams.toString();
+  fetch(noxy.href)
+    .then(data => data.json ? data.json() : data)
+    .then(meta => {
+      const container = document.getElementById(previewId);
+      container.append(elem('a', {href, rel: 'noopener noreferrer', target: '_blank'}, [
+        meta.images[0] && (
+          elem('img', {className: 'preview-image', src: getNoxyUrl('data', meta.images[0], id, relay).href})
+        ),
+        elem('h2', {className: 'preview-title'}, meta.title),
+        elem('p', {className: 'preview-descr'}, meta.descr),
+      ]));
+      container.classList.add('preview-loaded');
+    })
+    .catch(console.warn);
+  return elem('div', {
+    className: 'preview',
+    id: previewId
+  });
+}
+
 function createTextNote(evt, relay) {
   const {host, img, isReply, name, replies, time, userName} = getMetadata(evt, relay);
   // const isLongContent = evt.content.trimRight().length > 280;
@@ -164,13 +203,14 @@ function createTextNote(evt, relay) {
   const hasReactions = reactionMap[evt.id]?.length > 0;
   const didReact = hasReactions && !!reactionMap[evt.id].find(reaction => reaction.pubkey === pubkey);
   const replyFeed = replies[0] ? replies.map(e => replyDomMap[e.id] = createTextNote(e, relay)) : [];
-  const content = parseTextContent(evt.content);
+  const [content, {firstLink}] = parseTextContent(evt.content);
   const body = elem('div', {className: 'mbox-body'}, [
     elem('header', {
       className: 'mbox-header',
       title: `User: ${userName}\n${time}\n\nUser pubkey: ${evt.pubkey}\n\nRelay: ${host}\n\nEvent-id: ${evt.id}
       ${evt.tags.length ? `\nTags ${JSON.stringify(evt.tags)}\n` : ''}
-      ${isReply ? `\nReply to ${evt.tags[0][1]}\n` : ''}`
+      ${isReply ? `\nReply to ${evt.tags[0][1]}\n` : ''}
+      ${evt.content}`
     }, [
       elem('small', {}, [
         elem('strong', {className: name ? 'mbox-kind0-name' : 'mbox-username'}, name || userName),
@@ -178,7 +218,10 @@ function createTextNote(evt, relay) {
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
     ]),
-    elem('div', {/* data: isLongContent ? {append: evt.content.slice(280)} : null*/}, content),
+    elem('div', {/* data: isLongContent ? {append: evt.content.slice(280)} : null*/}, [
+      ...content,
+      firstLink ? linkPreview(firstLink, evt.id, relay) : ''
+    ]),
     elem('button', {
       className: 'btn-inline', name: 'star', type: 'button',
       data: {'eventId': evt.id, relay},
@@ -325,20 +368,9 @@ function handleMetadata(evt, relay) {
   }
 }
 
-const getNoxyUrl = (id, relay, url) => {
-  if (!isHttpUrl(url)) {
-    return false;
-  }
-  const picture = new URL('https://noxy.nostr.ch/data');
-  picture.searchParams.set('id', id);
-  picture.searchParams.set('relay', relay);
-  picture.searchParams.set('url', url);
-  return picture.href;
-}
-
 function setMetadata(evt, relay, content) {
   const user = userList.find(u => u.pubkey === evt.pubkey);
-  const picture = getNoxyUrl(evt.id, relay, content.picture);
+  const picture = getNoxyUrl('data', content.picture, evt.id, relay).href;
   if (!user) {
     userList.push({
       metadata: {[relay]: content},

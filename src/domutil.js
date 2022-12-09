@@ -42,7 +42,8 @@ function isValidURL(url) {
 }
 
 export function parseTextContent(string) {
-    return string
+    let firstLink;
+    return [string
         .trimRight()
         .replaceAll(/\n{3,}/g, '\n\n')
         .split('\n')
@@ -60,6 +61,7 @@ export function parseTextContent(string) {
                     if (!isValidURL(url)) {
                         return word;
                     }
+                    firstLink = firstLink || url.href;
                     return elem('a', {
                         href: url.href,
                         target: '_blank',
@@ -71,5 +73,6 @@ export function parseTextContent(string) {
             })
             .reduce((acc, word) => [...acc, word, ' '], []);
         })
-        .reduce((acc, words) => [...acc, ...words, elem('br')], []);
+        .reduce((acc, words) => [...acc, ...words, elem('br')], []),
+        {firstLink}];
 }

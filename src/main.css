@@ -32,7 +32,7 @@
     --bgcolor-inactive: #bababa;
     --bgcolor-textinput: #fff;
     --color: rgb(68 68 68);
-    --color-accent: #ff731d;
+    --color-accent: rgb(16, 93, 176);
     --bgcolor-danger: rgb(255, 80, 80);
   }
 }
