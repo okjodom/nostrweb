@@ -552,6 +552,7 @@ writeForm.addEventListener('submit', async (e) => {
           localStorage.removeItem('reply_to');
           newMessageDiv.append(writeForm);
         }
+        hideNewMessage(true);
         // console.info(`event published by ${url}`, ev);
       }
     });
