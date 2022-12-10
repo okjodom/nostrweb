@@ -171,7 +171,7 @@ const getNoxyUrl = (type, url, id, relay) => {
 function linkPreview(href, id, relay) {
   if ((/\.(gif|jpe?g|png)$/i).test(href)) {
     return elem('div', {},
-      [elem('img', {className: 'preview-image-only', src: getNoxyUrl('data', href, id, relay).href})]
+      [elem('img', {className: 'preview-image-only', loading: 'lazy', src: getNoxyUrl('data', href, id, relay).href})]
     );
   }
   const noxy = getNoxyUrl('meta', href, id, relay);
@@ -182,7 +182,7 @@ function linkPreview(href, id, relay) {
       const container = document.getElementById(previewId);
       container.append(elem('a', {href, rel: 'noopener noreferrer', target: '_blank'}, [
         meta.images[0] && (
-          elem('img', {className: 'preview-image', src: getNoxyUrl('data', meta.images[0], id, relay).href})
+          elem('img', {className: 'preview-image', loading: 'lazy', src: getNoxyUrl('data', meta.images[0], id, relay).href})
         ),
         elem('h2', {className: 'preview-title'}, meta.title),
         elem('p', {className: 'preview-descr'}, meta.descr),
@@ -435,8 +435,9 @@ function getMetadata(evt, relay) {
   const userName = name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
   const img = userImg ? elem('img', {
-    src: userImg,
     alt: `${userName} ${host}`,
+    loading: 'lazy',
+    src: userImg,
     title: `${userName} on ${host} ${userAbout}`,
   }) : elemCanvas(evt.pubkey);
   const isReply = evt.tags.some(hasEventTag);
