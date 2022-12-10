@@ -45,6 +45,7 @@ label {
 
 input[type="password"],
 input[type="text"],
+input[type="url"],
 textarea {
   background: var(--bgcolor-textinput);
   border: .2rem solid #b7b7b7;
@@ -55,10 +56,15 @@ textarea {
 }
 input[type="password"]:focus,
 input[type="text"]:focus,
+input[type="url"]:focus,
 textarea:focus {
   border-color: var(--focus-border-color);
   outline-offset: var(--focus-outline-offset);
   outline: var(--focus-outline);
+}
+input:invalid {
+  outline: 2px solid var(--bgcolor-danger);
+  outline-offset: var(--focus-outline-offset);
 }
 textarea {
   /* max-height: 64vh; */
@@ -143,11 +149,6 @@ button:disabled {
   --bg-color: var(--bgcolor-inactive);
   --border-color: var(--bgcolor-inactive);
   cursor: default;
-}
-
-.inline-text {
-  display: inline-block;
-  padding: 0 1ch;
 }
 
 .form-status {

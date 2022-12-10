@@ -723,3 +723,49 @@ document.body.addEventListener('click', (e) => {
     hideNewMessage(true);
   }
 });
+
+// profile
+const profileForm = document.querySelector('form[name="profile"]');
+const profileSubmit = profileForm.querySelector('button[type="submit"]');
+const profileStatus = document.querySelector('#profilestatus');
+const onProfileError = err => {
+  profileStatus.hidden = false;
+  profileStatus.textContent = err.message
+};
+profileForm.addEventListener('input', (e) => {
+  if (e.target.nodeName === 'TEXTAREA') {
+    updateElemHeight(e.target);
+  }
+  const form = new FormData(profileForm);
+  const name = form.get('name');
+  const about = form.get('about');
+  const picture = form.get('picture');
+  profileSubmit.disabled = !(name || about || picture);
+});
+
+profileForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(profileForm);
+  const privatekey = localStorage.getItem('private_key');
+
+  const newProfile = {
+    kind: 0,
+    pubkey,
+    content: JSON.stringify(Object.fromEntries(form)),
+    created_at: Math.floor(Date.now() * 0.001),
+    tags: [],
+  };
+  const sig = await signEvent(newProfile, privatekey).catch(console.error);
+  if (sig) {
+    const ev = await pool.publish({...newProfile, sig}, (status, url) => {
+      if (status === 0) {
+        console.info(`publish request sent to ${url}`);
+      }
+      if (status === 1) {
+        profileStatus.textContent = 'profile metadata successfully published';
+        profileStatus.hidden = false;
+        profileSubmit.disabled = true;
+      }
+    }).catch(console.error);
+  }
+});

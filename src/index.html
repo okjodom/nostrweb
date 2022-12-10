@@ -59,6 +59,18 @@
             <input type="text" name="username" id="username" placeholder="username">
             <button type="button" name="publish-username" tabindex="0">publish</button>
           </div> -->
+          <form action="#" name="profile" autocomplete="new-password">
+            <label for="profile_name">name</label>
+            <input type="text" name="name" id="profile_name" autocomplete="off" pattern="[a-zA-Z_0-9][a-zA-Z_\-0-9]+[a-zA-Z_0-9]">
+            <label for="profile_about">about</label>
+            <textarea name="about" id="profile_about"></textarea>
+            <label for="profile_picture">picture</label>
+            <input type="url" name="picture" id="profile_picture" placeholder="https://your.domain/image.png">
+            <div class="buttons">
+              <small id="profilestatus" class="form-status" hidden></small>
+              <button type="submit" name="publish" tabindex="0" disabled>publish</button>
+            </div>
+          </form>
           <form action="#" name="settings" autocomplete="new-password">
             <label for="pubkey">public-key</label>
             <input type="text" id="pubkey" autocomplete="off">
@@ -72,7 +84,6 @@
             <div class="buttons">
               <small id="keystatus" class="form-status" hidden></small>
               <button type="button" name="generate" tabindex="0">new</button>
-              <span class="inline-text"></span>
               <button type="button" name="import" tabindex="0" disabled>save</button>
             </div>
           </form>
