@@ -613,10 +613,10 @@ privateKeyInput.addEventListener('paste', (event) => {
   if (pubKeyInput.value || !event.clipboardData) {
     return;
   }
-  if (privateKeyInput.value === '' || (
-    privateKeyInput.selectionStart === 0
+  if (privateKeyInput.value === '' || ( // either privatekey field is empty
+    privateKeyInput.selectionStart === 0 // or the whole text is selected and replaced with the clipboard
     && privateKeyInput.selectionEnd === privateKeyInput.value.length
-  )) {
+  )) { // only generate the pubkey if no data other than the text from clipboard will be used
     try {
       pubKeyInput.value = getPublicKey(event.clipboardData.getData('text'));
     } catch(err) {} // settings form will call validKeys on input and display the error
