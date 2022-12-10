@@ -144,7 +144,7 @@
 .preview-image {
   margin-bottom: var(--gap);
   max-height: 30vh;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .preview-image-only {
