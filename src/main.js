@@ -187,14 +187,20 @@ const fetchNext = (href, id, relay) => {
     })
     .then(meta => {
       const container = document.getElementById(previewId);
-      container.append(elem('a', {href, rel: 'noopener noreferrer', target: '_blank'}, [
-        meta.images[0] && (
-          elem('img', {className: 'preview-image', loading: 'lazy', src: getNoxyUrl('data', meta.images[0], id, relay).href})
-        ),
-        elem('h2', {className: 'preview-title'}, meta.title),
-        elem('p', {className: 'preview-descr'}, meta.descr),
-      ]));
-      container.classList.add('preview-loaded');
+      const content = [];
+      if (meta.images[0]) {
+        content.push(elem('img', {className: 'preview-image', loading: 'lazy', src: getNoxyUrl('data', meta.images[0], id, relay).href}));
+      }
+      if (meta.title) {
+        content.push(elem('h2', {className: 'preview-title'}, meta.title));
+      }
+      if (meta.descr) {
+        content.push(elem('p', {className: 'preview-descr'}, meta.descr))
+      }
+      if (content.length) {
+        container.append(elem('a', {href, rel: 'noopener noreferrer', target: '_blank'}, content));
+        container.classList.add('preview-loaded');
+      }
     })
     .finally(() => {
       fetchPending = false;
