@@ -76,6 +76,14 @@ textarea:focus {
 #newMessage textarea:focus {
   min-height: 18rem;
 }
+@media (orientation: portrait) {
+  #newMessage textarea {
+    min-height: 8rem;
+  }
+  #newMessage textarea:focus {
+    min-height: 15rem;
+  }
+}
 
 .buttons {
   align-items: center;

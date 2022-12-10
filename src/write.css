@@ -24,6 +24,11 @@
   width: 100vw;
   z-index: 20;
 }
+@media (orientation: portrait) {
+  #newMessage {
+    align-items: start;
+  }
+}
 
 #newMessage #writeForm {
   align-items: start;
