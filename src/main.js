@@ -244,7 +244,7 @@ function createTextNote(evt, relay) {
       ${evt.content}`
     }, [
       elem('small', {}, [
-        elem('strong', {className: name ? 'mbox-kind0-name' : 'mbox-username'}, name || userName),
+        elem('strong', {className: `mbox-username${name ? ' mbox-kind0-name' : ''}`, data: {pubkey: evt.pubkey.slice(0, 12)}}, name || userName),
         ' ',
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
@@ -400,23 +400,40 @@ function handleMetadata(evt, relay) {
 }
 
 function setMetadata(evt, relay, content) {
-  const user = userList.find(u => u.pubkey === evt.pubkey);
+  let user = userList.find(u => u.pubkey === evt.pubkey);
   const picture = getNoxyUrl('data', content.picture, evt.id, relay).href;
   if (!user) {
-    userList.push({
+    user = {
       metadata: {[relay]: content},
       ...(content.picture && {picture}),
       pubkey: evt.pubkey,
-    });
+    };
+    userList.push(user);
   } else {
     user.metadata[relay] = {
       ...user.metadata[relay],
       timestamp: evt.created_at,
       ...content,
     };
+    // use only the first profile pic (for now), different pics on each releay are not supported yet
     if (!user.picture) {
       user.picture = picture;
-    } // no support (yet) for other picture from same pubkey on different relays
+    }
+  }
+  // update profile images
+  if (user.picture) {
+    feedContainer
+      .querySelectorAll(`canvas[data-pubkey="${evt.pubkey.slice(0, 12)}"]`)
+      .forEach(canvas => (canvas.parentNode.replaceChild(elem('img', {src: user.picture}), canvas)));
+  }
+  if (user.metadata[relay].name) {
+    feedContainer
+      .querySelectorAll(`.mbox-username[data-pubkey="${evt.pubkey.slice(0, 12)}"]`)
+      .forEach(username => {
+        username.textContent = user.metadata[relay].name;
+        username.classList.add('mbox-kind0-name');
+        username.removeAttribute('data-pubkey');
+      });
   }
   // if (tempContactList[relay]) {
   //   const updates = tempContactList[relay].filter(update => update.pubkey === evt.pubkey);
@@ -443,7 +460,7 @@ const getHost = (url) => {
 }
 
 const elemCanvas = (text) => {
-  const canvas = elem('canvas', {height: 80, width: 80});
+  const canvas = elem('canvas', {height: 80, width: 80, data: {pubkey: text.slice(0, 12)}});
   const context = canvas.getContext('2d');
   const color = `#${text.slice(0, 6)}`;
   context.fillStyle = color;
