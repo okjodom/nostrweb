@@ -49,10 +49,12 @@
 }
 
 .mbox-body {
-  flex-basis: calc(100% - 64px - 1rem);
   flex-grow: 0;
   flex-shrink: 1;
   word-break: break-word;
+}
+.mbox-img + .mbox-body {
+  flex-basis: calc(100% - 64px - 1rem);
 }
 
 .mbox-header {
@@ -64,6 +66,7 @@
 .mbox-header time,
 .mbox-username {
   color: var(--color-accent);
+  cursor: pointer;
 }
 
 .mbox-kind0-name {

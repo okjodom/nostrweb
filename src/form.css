@@ -168,9 +168,9 @@ button:disabled {
 .form-inline * + * {
   margin-left: var(--gap);
 }
-.cards .form-inline button,
-.cards .form-inline input[type="text"],
-.cards .form-inline textarea {
+.form-inline button,
+.form-inline input[type="text"],
+.form-inline textarea {
   margin: .4rem 0;
 }
 

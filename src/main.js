@@ -2,15 +2,11 @@ import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tool
 import {elem, parseTextContent} from './domutil.js';
 import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://relay.nostr.ch/
+
 const pool = relayPool();
 pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 pool.addRelay('wss://relay.damus.io', {read: true, write: true});
-pool.addRelay('wss://nostr.x1ddos.ch', {read: true, write: true});
 pool.addRelay('wss://relay.nostr.ch', {read: true, write: true});
-// pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
-// pool.addRelay('wss://nostr.bitcoiner.social/', {read: true, write: true});
-// read only
-// pool.addRelay('wss://nostr.rocks', {read: true, write: false});
 
 function onEvent(evt, relay) {
   switch (evt.kind) {
@@ -41,20 +37,216 @@ let pubkey = localStorage.getItem('pub_key') || (() => {
   return pubkey;
 })();
 
-const subscription = pool.sub({
-  cb: onEvent,
-  filter: {
-    // authors: [
-    //   '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // quark
-    //   'a6057742e73ff93b89587c27a74edf2cdab86904291416e90dc98af1c5f70cfa', // mosc
-    //   '3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d', // fiatjaf
-    //   '52155da703585f25053830ac39863c80ea6adc57b360472c16c566a412d2bc38', // x1ddos
-    //   // pubkey, // me
-    //   '32e1827635450ebb3c5a7d12c1f8e7b2b514439ac10a67eef3d9fd9c5c68e245',  // jb55
-    // ],
-    // since: new Date(Date.now() - (24 * 60 * 60 * 1000)),
-    limit: 250,
+const subList = [];
+const unSubAll = () => {
+  subList.forEach(sub => sub.unsub());
+  subList.length = 0;
+};
+
+window.addEventListener('popstate', (event) => {
+  // console.log(`popstate path: ${location.pathname}, state: ${JSON.stringify(event.state)}`);
+  unSubAll();
+  if (event.state?.author) {
+    subProfile(event.state.author);
+    return;
   }
+  if (event.state?.pubOrEvt) {
+    subNoteAndProfile(event.state.pubOrEvt);
+    return;
+  }
+  if (event.state?.eventId) {
+    subTextNote(event.state.eventId);
+    return;
+  }
+  sub24hFeed();
+  showFeed();
+});
+
+switch(location.pathname) {
+  case '/':
+    history.pushState({}, '', '/');
+    sub24hFeed();
+    break;
+  default:
+    const pubOrEvt = location.pathname.slice(1);
+    if (pubOrEvt.length === 64 && pubOrEvt.match(/^[0-9a-f]+$/)) {
+      history.pushState({pubOrEvt}, '', `/${pubOrEvt}`);
+      subNoteAndProfile(pubOrEvt);
+    }
+    break;
+}
+
+function sub24hFeed() {
+  subList.push(pool.sub({
+    cb: onEvent,
+    filter: {
+      kinds: [0, 1, 2, 7],
+      // until: Math.floor(Date.now() * 0.001),
+      since: Math.floor((Date.now() * 0.001) - (24 * 60 * 60)),
+      limit: 100,
+    }
+  }));
+}
+
+function subNoteAndProfile(id) {
+  subProfile(id);
+  subTextNote(id);
+}
+
+function subTextNote(eventId) {
+  subList.push(pool.sub({
+    cb: (evt, relay) => {
+      clearTextNoteDetail();
+      showTextNoteDetail(evt, relay);
+    },
+    filter: {
+      ids: [eventId],
+      kinds: [1],
+      limit: 1,
+    }
+  }));
+}
+
+function subProfile(pubkey) {
+  subList.push(pool.sub({
+    cb: (evt, relay) => {
+      renderProfile(evt, relay);
+      showProfileDetail();
+    },
+    filter: {
+      authors: [pubkey],
+      kinds: [0],
+      limit: 1,
+    }
+  }));
+  // get notes for profile
+  subList.push(pool.sub({
+    cb: (evt, relay) => {
+      showTextNoteDetail(evt, relay);
+      showProfileDetail();
+    },
+    filter: {
+      authors: [pubkey],
+      kinds: [1],
+      limit: 150,
+    }
+  }));
+}
+
+const detailContainer = document.querySelector('#detail');
+const profileContainer = document.querySelector('#profile');
+const profileAbout = profileContainer.querySelector('.profile-about');
+const profileName = profileContainer.querySelector('.profile-name');
+const profilePubkey = profileContainer.querySelector('.profile-pubkey');
+const profilePubkeyLabel = profileContainer.querySelector('.profile-pubkey-label');
+const profileImage = profileContainer.querySelector('.profile-image');
+const textNoteContainer = document.querySelector('#textnote');
+
+function clearProfile() {
+  profileAbout.textContent = '';
+  profileName.textContent = '';
+  profilePubkey.textContent = '';
+  profilePubkeyLabel.hidden = true;
+}
+function renderProfile(evt, relay) {
+  profileContainer.dataset.pubkey = evt.pubkey;
+  profilePubkey.textContent = evt.pubkey;
+  profilePubkeyLabel.hidden = false;
+  const content = parseContent(evt.content);
+  if (content) {
+    profileAbout.textContent = content.about;
+    profileName.textContent = content.name;
+    const noxyImg = getNoxyUrl('data', content.picture, evt.id, relay);
+    if (noxyImg) {
+      profileImage.setAttribute('src', getNoxyUrl('data', noxyImg, evt.id, relay))
+    }
+  }
+}
+
+function showProfileDetail() {
+  profileContainer.hidden = false;
+  textNoteContainer.hidden = false;
+  showDetail();
+}
+
+function clearTextNoteDetail() {
+  textNoteContainer.replaceChildren([]);
+}
+
+function showTextNoteDetail(evt, relay) {
+  if (!textNoteContainer.querySelector(`[data-id="${evt.id}"]`)) {
+    textNoteContainer.append(createTextNote(evt, relay));
+  }
+  textNoteContainer.hidden = false;
+  profileContainer.hidden = true;
+  showDetail();
+}
+
+function showDetail() {
+  feedContainer.hidden = true;
+  detailContainer.hidden = false;
+}
+
+function showFeed() {
+  feedContainer.hidden = false;
+  detailContainer.hidden = true;
+}
+
+document.querySelector('label[for="feed"]').addEventListener('click', () => {
+  if (location.pathname !== '/') {
+    showFeed();
+    history.pushState({}, '', '/');
+    unSubAll();
+    sub24hFeed();
+  }
+});
+
+document.body.addEventListener('click', (e) => {
+  const button = e.target.closest('button');
+  const pubkey = e.target.closest('[data-pubkey]')?.dataset.pubkey;
+  const id = e.target.closest('[data-id]')?.dataset.id;
+  const relay = e.target.closest('[data-relay]')?.dataset.relay;
+  if (button && button.name === 'reply') {
+    if (localStorage.getItem('reply_to') === id) {
+      writeInput.blur();
+      return;
+    }
+    appendReplyForm(button);
+    localStorage.setItem('reply_to', id);
+    return;
+  }
+  if (button && button.name === 'star') {
+    upvote(id, relay)
+    return;
+  }
+  if (button && button.name === 'back') {
+    hideNewMessage(true);
+    return;
+  }
+  const username = e.target.closest('.mbox-username')
+  if (username) {
+    history.pushState({author: pubkey}, '', `/${pubkey}`);
+    unSubAll();
+    clearProfile();
+    clearTextNoteDetail();
+    subProfile(pubkey);
+    showProfileDetail();
+    return;
+  }
+  const eventTime = e.target.closest('.mbox-header time');
+  if (eventTime) {
+    history.pushState({eventId: id, relay}, '', `/${id}`);
+    unSubAll();
+    clearTextNoteDetail();
+    subTextNote(id);
+    return;
+  }
+  // const container = e.target.closest('[data-append]');
+  // if (container) {
+  //   container.append(...parseTextContent(container.dataset.append));
+  //   delete container.dataset.append;
+  //   return;
+  // }
 });
 
 const textNoteList = []; // could use indexDB
@@ -245,7 +437,7 @@ function createTextNote(evt, relay) {
       ${evt.content}`
     }, [
       elem('small', {}, [
-        elem('strong', {className: `mbox-username${name ? ' mbox-kind0-name' : ''}`, data: {pubkey: evt.pubkey.slice(0, 12)}}, name || userName),
+        elem('strong', {className: `mbox-username${name ? ' mbox-kind0-name' : ''}`}, name || userName),
         ' ',
         elem('time', {dateTime: time.toISOString()}, formatTime(time)),
       ]),
@@ -276,10 +468,10 @@ function createTextNote(evt, relay) {
     appendReplyForm(body.querySelector('button[name="reply"]'));
     requestAnimationFrame(() => updateElemHeight(writeInput));
   }
-  return rendernArticle([
+  return renderArticle([
     elem('div', {className: 'mbox-img'}, [img]), body,
     replies[0] ? elem('div', {className: 'mobx-replies'}, replyFeed.reverse()) : '',
-  ]);
+  ], {data: {id: evt.id, pubkey: evt.pubkey, relay}});
 }
 
 function handleReply(evt, relay) {
@@ -364,7 +556,7 @@ function renderUpdateContact(evt, relay) {
       JSON.stringify(evt.tags),
     ]),
   ]);
-  return rendernArticle([img, body], {className: 'mbox-updated-contact'});
+  return renderArticle([img, body], {className: 'mbox-updated-contact', data: {id: evt.id, pubkey: evt.pubkey, relay}});
 }
 
 function renderRecommendServer(evt, relay) {
@@ -377,12 +569,12 @@ function renderRecommendServer(evt, relay) {
     ]),
     ` recommends server: ${evt.content}`,
   ]);
-  return rendernArticle([
+  return renderArticle([
     elem('div', {className: 'mbox-img'}, [img]), body
-  ], {className: 'mbox-recommend-server', data: {relay: evt.content}});
+  ], {className: 'mbox-recommend-server', data: {id: evt.id, pubkey: evt.pubkey}});
 }
 
-function rendernArticle(content, props = {}) {
+function renderArticle(content, props = {}) {
   const className = props.className ? ['mbox', props?.className].join(' ') : 'mbox';
   return elem('article', {...props, className}, content);
 }
@@ -390,13 +582,19 @@ function rendernArticle(content, props = {}) {
 const userList = [];
 // const tempContactList = {};
 
-function handleMetadata(evt, relay) {
+function parseContent(content) {
   try {
-    const content = JSON.parse(evt.content);
-    setMetadata(evt, relay, content);
+    return JSON.parse(content);
   } catch(err) {
     console.log(evt);
     console.error(err);
+  }
+}
+
+function handleMetadata(evt, relay) {
+  const content = parseContent(evt.content);
+  if (content) {
+    setMetadata(evt, relay, content);
   }
 }
 
@@ -423,17 +621,16 @@ function setMetadata(evt, relay, content) {
   }
   // update profile images
   if (user.picture) {
-    feedContainer
-      .querySelectorAll(`canvas[data-pubkey="${evt.pubkey.slice(0, 12)}"]`)
+    document.body
+      .querySelectorAll(`canvas[data-pubkey="${evt.pubkey}"]`)
       .forEach(canvas => (canvas.parentNode.replaceChild(elem('img', {src: user.picture}), canvas)));
   }
   if (user.metadata[relay].name) {
-    feedContainer
-      .querySelectorAll(`.mbox-username[data-pubkey="${evt.pubkey.slice(0, 12)}"]`)
+    document.body
+      .querySelectorAll(`[data-id="${evt.pubkey}"] .mbox-username:not(.mbox-kind0-name)`)
       .forEach(username => {
         username.textContent = user.metadata[relay].name;
         username.classList.add('mbox-kind0-name');
-        username.removeAttribute('data-pubkey');
       });
   }
   // if (tempContactList[relay]) {
@@ -461,7 +658,7 @@ const getHost = (url) => {
 }
 
 const elemCanvas = (text) => {
-  const canvas = elem('canvas', {height: 80, width: 80, data: {pubkey: text.slice(0, 12)}});
+  const canvas = elem('canvas', {height: 80, width: 80, data: {pubkey: text}});
   const context = canvas.getContext('2d');
   const color = `#${text.slice(0, 6)}`;
   context.fillStyle = color;
@@ -472,7 +669,7 @@ const elemCanvas = (text) => {
   if (color === '#000000') {
     context.fillStyle = '#fff';
   }
-  context.fillText(text, 2, 46);
+  context.fillText(text.slice(0, 8), 2, 46);
   return canvas;
 }
 
@@ -494,23 +691,6 @@ function getMetadata(evt, relay) {
   const time = new Date(evt.created_at * 1000);
   return {host, img, isReply, name, replies, time, userName};
 }
-
-feedContainer.addEventListener('click', (e) => {
-  const button = e.target.closest('button');
-  if (button && button.name === 'reply') {
-    if (localStorage.getItem('reply_to') === button.dataset.eventId) {
-      writeInput.blur();
-      return;
-    }
-    appendReplyForm(button);
-    localStorage.setItem('reply_to', button.dataset.eventId);
-    return;
-  }
-  if (button && button.name === 'star') {
-    upvote(button.dataset.eventId, button.dataset.relay)
-    return;
-  }
-});
 
 const writeForm = document.querySelector('#writeForm');
 const writeInput = document.querySelector('textarea[name="message"]');
@@ -729,19 +909,6 @@ privateTgl.addEventListener('click', () => {
 
 privateKeyInput.value = localStorage.getItem('private_key');
 pubKeyInput.value = localStorage.getItem('pub_key');
-
-document.body.addEventListener('click', (e) => {
-  // const container = e.target.closest('[data-append]');
-  // if (container) {
-  //   container.append(...parseTextContent(container.dataset.append));
-  //   delete container.dataset.append;
-  //   return;
-  // }
-  const back = e.target.closest('[name="back"]')
-  if (back) {
-    hideNewMessage(true);
-  }
-});
 
 // profile
 const profileForm = document.querySelector('form[name="profile"]');
