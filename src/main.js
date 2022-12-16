@@ -210,7 +210,8 @@ const fetchNext = (href, id, relay) => {
         return fetchNext(href, id, relay);
       }
     })
-    .catch(console.warn);
+    .catch(err => err.text && err.text())
+    .then(errMsg => errMsg && console.warn(errMsg));
   return previewId;
 };
 
