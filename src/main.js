@@ -86,7 +86,7 @@ function sub24hFeed() {
       kinds: [0, 1, 2, 7],
       // until: Math.floor(Date.now() * 0.001),
       since: Math.floor((Date.now() * 0.001) - (24 * 60 * 60)),
-      limit: 100,
+      limit: 450,
     }
   }));
 }
