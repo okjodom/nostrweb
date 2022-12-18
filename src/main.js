@@ -147,6 +147,8 @@ function clearProfile() {
   profileName.textContent = '';
   profilePubkey.textContent = '';
   profilePubkeyLabel.hidden = true;
+  profileImage.removeAttribute('src');
+  profileImage.hidden = true;
 }
 function renderProfile(evt, relay) {
   profileContainer.dataset.pubkey = evt.pubkey;
@@ -158,7 +160,8 @@ function renderProfile(evt, relay) {
     profileName.textContent = content.name;
     const noxyImg = getNoxyUrl('data', content.picture, evt.id, relay);
     if (noxyImg) {
-      profileImage.setAttribute('src', getNoxyUrl('data', noxyImg, evt.id, relay))
+      profileImage.setAttribute('src', getNoxyUrl('data', noxyImg, evt.id, relay));
+      profileImage.hidden = false;
     }
   }
 }
