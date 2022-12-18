@@ -5,8 +5,11 @@ import {dateTime, formatTime} from './timeutil.js';
 
 const pool = relayPool();
 pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
-pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
+// pool.addRelay('wss://relay.damus.io', {read: true, write: true});
+pool.addRelay('wss://nostr-relay.wlvs.space', {read: true, write: true});
 pool.addRelay('wss://relay.nostr.ch', {read: true, write: true});
+pool.addRelay('wss://nostr.sandwich.farm', {read: true, write: true});
 
 function onEvent(evt, relay) {
   switch (evt.kind) {
