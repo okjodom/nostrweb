@@ -7,10 +7,9 @@ some useful resources:
 
 * JS library used in this project: https://github.com/fiatjaf/nostr-tools
 * NIPs: https://github.com/nostr-protocol/nips
-* relays registry: https://nostr-registry.netlify.app/
-* event inspector: https://nostr.com/
-* a working web interface in vue.js: https://astral.ninja/
-* https://github.com/aljazceru/awesome-nostr
+* relays registry: https://nostr-registry.netlify.app
+* event inspector: https://nostr.guru
+* a list of nostr projects and resources: https://nostr.net
 
 ## dev
 
