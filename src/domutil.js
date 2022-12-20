@@ -31,6 +31,9 @@ function isValidURL(url) {
     if (!['', '443', '80'].includes(url.port)) {
         return false;
     }
+    if (url.hostname === 'localhost') {
+        return false;
+    }
     const lastDot = url.hostname.lastIndexOf('.');
     if (lastDot < 1) {
         return false;
