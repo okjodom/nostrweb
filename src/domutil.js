@@ -38,6 +38,12 @@ function isValidURL(url) {
     if (url.hostname.slice(lastDot) === '.local') {
         return false;
     }
+    if (url.hostname.slice(lastDot + 1).match(/^[\d]+$/)) { // there should be no tld with numbers, possible ipv4
+        return false;
+    }
+    if (url.hostname.includes(':')) { // possibly an ipv6 addr; certainly an invalid hostname
+        return false;
+    }
     return true;
 }
 
