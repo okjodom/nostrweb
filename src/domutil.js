@@ -59,6 +59,11 @@ export function parseTextContent(string) {
         .map(line => {
             const words = line.split(' ');
             return words.map(word => {
+                if (word.match(/^ln(tbs?|bcr?t?)[a-z0-9]+$/g)) {
+                    return elem('a', {
+                        href: `lightning:${word}`
+                    }, `lightning:${word.slice(0, 24)}…`);
+                }
                 if (!word.match(/(https?:\/\/|www\.)\S*/)) {
                     return word;
                 }
