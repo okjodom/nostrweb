@@ -1,9 +1,10 @@
-import {relayPool, generatePrivateKey, getPublicKey, signEvent} from 'nostr-tools';
+import {relayPool, generatePrivateKey, getEventHash, getPublicKey, signEvent} from 'nostr-tools';
 import {elem, parseTextContent} from './domutil.js';
 import {dateTime, formatTime} from './timeutil.js';
 // curl -H 'accept: application/nostr+json' https://relay.nostr.ch/
 
 const pool = relayPool();
+
 pool.addRelay('wss://relay.nostr.info', {read: true, write: true});
 pool.addRelay('wss://nostr.openchain.fr', {read: true, write: true});
 // pool.addRelay('wss://relay.damus.io', {read: true, write: true});
@@ -39,6 +40,8 @@ let pubkey = localStorage.getItem('pub_key') || (() => {
   localStorage.setItem('pub_key', pubkey);
   return pubkey;
 })();
+
+const difficulty = 16;
 
 const subList = [];
 const unSubAll = () => {
@@ -161,9 +164,9 @@ function renderProfile(evt, relay) {
   if (content) {
     profileAbout.textContent = content.about;
     profileName.textContent = content.name;
-    const noxyImg = getNoxyUrl('data', content.picture, evt.id, relay);
+    const noxyImg = validatePow(evt) && getNoxyUrl('data', content.picture, evt.id, relay);
     if (noxyImg) {
-      profileImage.setAttribute('src', getNoxyUrl('data', noxyImg, evt.id, relay));
+      profileImage.setAttribute('src', noxyImg);
       profileImage.hidden = false;
     }
   }
@@ -450,7 +453,7 @@ function createTextNote(evt, relay) {
     ]),
     elem('div', {/* data: isLongContent ? {append: evt.content.slice(280)} : null*/}, [
       ...content,
-      firstLink ? linkPreview(firstLink, evt.id, relay) : ''
+      (firstLink && validatePow(evt)) ? linkPreview(firstLink, evt.id, relay) : '',
     ]),
     elem('button', {
       className: 'btn-inline', name: 'star', type: 'button',
@@ -626,7 +629,7 @@ function setMetadata(evt, relay, content) {
     }
   }
   // update profile images
-  if (user.picture) {
+  if (user.picture && validatePow(evt)) {
     document.body
       .querySelectorAll(`canvas[data-pubkey="${evt.pubkey}"]`)
       .forEach(canvas => (canvas.parentNode.replaceChild(elem('img', {src: user.picture}), canvas)));
@@ -686,7 +689,7 @@ function getMetadata(evt, relay) {
   const name = user?.metadata[relay]?.name;
   const userName = name || evt.pubkey.slice(0, 8);
   const userAbout = user?.metadata[relay]?.about || '';
-  const img = userImg ? elem('img', {
+  const img = (userImg && validatePow(evt)) ? elem('img', {
     alt: `${userName} ${host}`,
     loading: 'lazy',
     src: userImg,
@@ -761,13 +764,16 @@ function hideNewMessage(hide) {
 
 async function upvote(eventId, relay) {
   const privatekey = localStorage.getItem('private_key');
-  const newReaction = {
+  const newReaction = powEvent({
     kind: 7,
     pubkey, // TODO: lib could check that this is the pubkey of the key to sign with
     content: '+',
-    tags: [['e', eventId, relay, 'reply']],
+    tags: [
+      ['nonce', '0', `${difficulty}`],
+      ['e', eventId, relay, 'reply'],
+    ],
     created_at: Math.floor(Date.now() * 0.001),
-  };
+  }, difficulty);
   const sig = await signEvent(newReaction, privatekey).catch(console.error);
   if (sig) {
     const ev = await pool.publish({...newReaction, sig}, (status, url) => {
@@ -798,13 +804,13 @@ writeForm.addEventListener('submit', async (e) => {
   }
   const replyTo = localStorage.getItem('reply_to');
   const tags = replyTo ? [['e', replyTo, eventRelayMap[replyTo][0]]] : [];
-  const newEvent = {
+  const newEvent = powEvent({
     kind: 1,
-    pubkey,
     content,
-    tags,
+    pubkey,
+    tags: [['nonce', '0', `${difficulty}`], ...tags],
     created_at: Math.floor(Date.now() * 0.001),
-  };
+  }, difficulty);
   const sig = await signEvent(newEvent, privatekey).catch(onSendError);
   if (sig) {
     const ev = await pool.publish({...newEvent, sig}, (status, url) => {
@@ -940,13 +946,13 @@ profileForm.addEventListener('submit', async (e) => {
   const form = new FormData(profileForm);
   const privatekey = localStorage.getItem('private_key');
 
-  const newProfile = {
+  const newProfile = powEvent({
     kind: 0,
     pubkey,
     content: JSON.stringify(Object.fromEntries(form)),
+    tags: [['nonce', '0', `${difficulty}`]],
     created_at: Math.floor(Date.now() * 0.001),
-    tags: [],
-  };
+  }, difficulty);
   const sig = await signEvent(newProfile, privatekey).catch(console.error);
   if (sig) {
     const ev = await pool.publish({...newProfile, sig}, (status, url) => {
@@ -961,3 +967,30 @@ profileForm.addEventListener('submit', async (e) => {
     }).catch(console.error);
   }
 });
+
+function validatePow(evt) {
+  const tag = evt.tags.find(tag => tag[0] === 'nonce');
+  if (!tag) {
+    return false;
+  }
+  const [, , difficulty2] = tag;
+  if (difficulty2 < 16) {
+    return false;
+  }
+  return evt.id.substring(0, difficulty2 / 4) === '00'.repeat(difficulty2 / 8);
+}
+
+function powEvent(newEvent, difficulty) {
+  const chars = difficulty / 8;
+  let n = Number(newEvent.tags[0][1]) + 1;
+  // const until = Date.now() + 15000;
+  console.time('pow');
+  while (true/*Date.now() < until*/) {
+    newEvent.tags[0][1] = `${n++}`;
+    const id = getEventHash(newEvent, privatekey);
+    if (id.substring(0, chars * 2) === '00'.repeat(chars)) {
+      console.timeEnd('pow');
+      return newEvent;
+    }
+  }
+}

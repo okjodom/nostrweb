@@ -158,6 +158,4 @@
   max-width: 48rem;
   padding: 1.5rem 1.8rem;
   width: 100%;
-  /* TODO: revert when things calm down or we find an alternative */
-  display: none;
 }
