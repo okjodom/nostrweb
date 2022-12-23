@@ -257,6 +257,8 @@ document.body.addEventListener('click', (e) => {
 
 const textNoteList = []; // could use indexDB
 const eventRelayMap = {}; // eventId: [relay1, relay2]
+const replyList = [];
+const reactionMap = {};
 const hasEventTag = tag => tag[0] === 'e';
 
 const dropDuplicateToggle = document.querySelector('#duplicates');
@@ -269,9 +271,12 @@ dropDuplicateToggle.checked = dropDuplicate;
 
 function isValidNote(evt) {
   if (dropDuplicate) {
-    const similarEvents = textNoteList.filter(({content}) => content === evt.content);
+    const similarEvents = [
+      ...textNoteList.filter(({content}) => content === evt.content),
+      ...replyList.filter(({content}) => content === evt.content),
+    ].filter(({created_at}) => ((created_at + 3600) > evt.created_at));
     if (similarEvents?.length >= 5) {
-      console.info(`DROP event ${evt.id} already got ${similarEvents.length}`, similarEvents);
+      console.info(`DROP event with content: "${evt.content.trim()}" already got ${similarEvents.length} similar events withing the last hour`, similarEvents, `\n dropped event id: ${evt.id}`);
       return false;
     }
   }
@@ -294,9 +299,6 @@ function handleTextNote(evt, relay) {
     renderFeed();
   }
 }
-
-const replyList = [];
-const reactionMap = {};
 
 const getReactionList = (id) => {
   return reactionMap[id]?.map(({content}) => content) || [];
@@ -379,6 +381,7 @@ setInterval(() => {
 }, 10000);
 
 const getNoxyUrl = (type, url, id, relay) => {
+  return false;
   if (!isHttpUrl(url)) {
     return false;
   }
@@ -393,6 +396,9 @@ const fetchQue = [];
 let fetchPending;
 const fetchNext = (href, id, relay) => {
   const noxy = getNoxyUrl('meta', href, id, relay);
+  if (!noxy) {
+    return;
+  }
   const previewId = noxy.searchParams.toString();
   if (fetchPending) {
     fetchQue.push({href, id, relay});
