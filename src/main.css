@@ -14,6 +14,7 @@
   --focus-outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
   --font-small: 1.2rem;
   --gap: 2.4rem;
+  --gap-half: 1.2rem;
 }
 
 ::selection {

@@ -187,6 +187,16 @@ button:disabled {
   flex-grow: 0;
 }
 
+
+input[type="checkbox"] {
+  margin: 0;
+}
+label.checkbox {
+  align-items: baseline;
+  display: flex;
+  gap: var(--gap-half);
+}
+
 button#publish {
   align-self: end;
   order: 2;

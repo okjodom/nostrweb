@@ -45,7 +45,7 @@ input[type="radio"]:checked + label {
 .tab-content {
   max-width: 96ch;
   min-height: 200px;
-  padding: calc(.5 * var(--gap)) 0 100px 0;
+  padding: var(--gap-half) 0 100px 0;
 }
 .tabbed {
   align-items: start;

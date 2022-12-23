@@ -259,7 +259,29 @@ const textNoteList = []; // could use indexDB
 const eventRelayMap = {}; // eventId: [relay1, relay2]
 const hasEventTag = tag => tag[0] === 'e';
 
+const dropDuplicateToggle = document.querySelector('#duplicates');
+let dropDuplicate = JSON.parse(localStorage.getItem('filter_duplicates')) ?? true;
+dropDuplicateToggle.addEventListener('click', (e) => {
+  localStorage.setItem('filter_duplicates', e.target.checked);
+  dropDuplicate = e.target.checked;
+});
+dropDuplicateToggle.checked = dropDuplicate;
+
+function isValidNote(evt) {
+  if (dropDuplicate) {
+    const similarEvents = textNoteList.filter(({content}) => content === evt.content);
+    if (similarEvents?.length >= 5) {
+      console.info(`DROP event ${evt.id} already got ${similarEvents.length}`, similarEvents);
+      return false;
+    }
+  }
+  return true;
+}
+
 function handleTextNote(evt, relay) {
+  if (!isValidNote(evt)) {
+    return;
+  }
   if (eventRelayMap[evt.id]) {
     eventRelayMap[evt.id] = [relay, ...(eventRelayMap[evt.id])];
   } else {

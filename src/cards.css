@@ -10,7 +10,7 @@
 }
 @media (orientation: portrait) {
   .mbox {
-    padding: 0 calc(.5 * var(--gap));
+    padding: 0 var(--gap-half);
   }
 }
 .mbox:last-child {
